@@ -1,10 +1,8 @@
 
 import pytest
-
 import numpy as np
-
 from numpy.testing import assert_equal
-
+from collections import deque
 from PIL import Image
 
 from src.Base.Tree import Tree
@@ -22,6 +20,14 @@ def test_export():
   tree.make_image_graph('image.png')
 
   assert_equal(read_image('image.png'), read_image('source.png'))
+
+def test_paths():
+  tree = make_tree()
+
+  paths = list(tree.gen_terminal_paths())
+
+  assert len(paths) == 1, "The tree with two leaves must return 1 path"
+  assert deque([tree.root.children[0], tree.root, tree.root.children[1]]) in paths
 
 def test_cut():
   tree = make_tree()

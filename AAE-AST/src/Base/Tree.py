@@ -10,6 +10,7 @@ import numpy as np
 import random
 
 from collections import deque
+from itertools import combinations
 
 class Tree:
   """ A tree class, which utilizes a list of nodes and allow to perform specific operations
@@ -89,23 +90,17 @@ class Tree:
 
     Returns:
       A generator, which yields a path(deque) between two random leaves in the tree.
+
+    Complexity:
+      1. Setup O(m + n), where m is a number of edges and n is a number of edges
+      2. Path generation will take at max O(h) steps, where h is the height of the tree
+      3. There will be yielded combination(leaves, 2) paths for a tree or nearly O(leaves ** 2) pathes.
     """
 
     nodes = self.__traverse(self.root, False)
-    leaves = list(filter(lambda node: node.is_terminal, nodes))
+    leaves = filter(lambda node: node.is_terminal, nodes)
 
-    def sample(l: list[Node]):
-      assert len(l) > 0
-
-      index = random.randint(0, len(l) - 1)
-      element = l[index]
-      l[index] = l[-1]
-      l.pop()
-
-      return element
-
-    while len(leaves) > 1:
-      lhs, rhs = sample(leaves), sample(leaves)
+    for lhs, rhs in combinations(leaves, 2):
       lhs_path, rhs_path = deque(), deque()
 
       while (lhs != rhs):
