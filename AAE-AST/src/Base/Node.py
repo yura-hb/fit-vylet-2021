@@ -39,12 +39,3 @@ class Node:
       return self.name + "_" + self.id
 
     return self.name + "_" + self.id + "=" + self.value
-
-  def obfuscate(self):
-    pass
-
-  def obfuscate_name(self):
-    pass
-
-  def obfuscate_value(self):
-    pass

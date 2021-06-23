@@ -1,9 +1,14 @@
 
+from torch import rand
 from .Node import *
 from typing import Generator
+from ..Utils.timing import measure
 
 import pydot
 import os
+import numpy as np
+import random
+
 from collections import deque
 
 class Tree:
@@ -70,7 +75,51 @@ class Tree:
 
     return Tree(node)
 
-  def __traverse(self, node: Node, validateNode: bool) -> Generator[Node, None, None]:
+  @measure
+  def gen_terminal_paths(self) -> Generator[deque[Node], None, None]:
+    """ Generates all paths between terminals in the tree.
+
+      The overall process is done in two steps:
+
+      1. Generates all pathes from root to leaves (BFS Traverse to find leaves)
+      2. Selects combinations between terminal nodes and create paths
+
+    Args:
+      Node (Terminal): Node shouldn't have any children, a. k. a. it should be terminal
+
+    Returns:
+      A generator, which yields a path(deque) between two random leaves in the tree.
+    """
+
+    nodes = self.__traverse(self.root, False)
+    leaves = list(filter(lambda node: node.is_terminal, nodes))
+
+    def sample(l: list[Node]):
+      assert len(l) > 0
+
+      index = random.randint(0, len(l) - 1)
+      element = l[index]
+      l[index] = l[-1]
+      l.pop()
+
+      return element
+
+    while len(leaves) > 1:
+      lhs, rhs = sample(leaves), sample(leaves)
+      lhs_path, rhs_path = deque(), deque()
+
+      while (lhs != rhs):
+        lhs_path.append(lhs)
+        lhs = lhs.parent
+
+        rhs_path.appendleft(rhs)
+        rhs = rhs.parent
+
+      lhs_path.append(lhs)
+
+      yield lhs_path + rhs_path
+
+  def __traverse(self, node: Node, validateNode: bool = False) -> Generator[Node, None, None]:
     """ Traversers a tree with bfs and returns all closed nods
 
     Args:
