@@ -2,7 +2,6 @@
 from torch import rand
 from .Node import *
 from typing import Generator
-from ..Utils.timing import measure
 
 import pydot
 import os
@@ -24,7 +23,7 @@ class Tree:
     """
     self.root = root
 
-    nodes = list(self.__traverse(root, True))
+    nodes = list(self.traverse(root, True))
 
     self.size = len(nodes)
 
@@ -43,7 +42,7 @@ class Tree:
 
     graph = pydot.Dot(graph_type = 'digraph')
 
-    for node in self.__traverse(self.root, False):
+    for node in self.traverse(self.root, False):
       parent_name = node.graph_representation
 
       for child in node.children:
@@ -53,11 +52,12 @@ class Tree:
 
     graph.write_png(output_path)
 
-  def cut(self, node: Node):
+  def cut(self, node: Node, leavesNodeInParent: bool = False) -> Node:
     """ Cuts the tree at the specific Node returning a tree object
 
     Args:
         node (Node): A node to cut.
+        leavesNodeInParent (bool): A flag, which specifies if the cut node should be leaved in the root tree.
 
     Returns:
         A tree object with the root at the node.
@@ -66,17 +66,21 @@ class Tree:
     parent = node.parent
 
     if parent is None:
-      return self
+      return self.root
 
-    nodes = list(self.__traverse(node, False))
+    nodes = list(self.traverse(node, False))
     self.size -= len(nodes)
 
-    node.parent = None
-    parent.children.remove(node)
+    new_node = Node(node.parent, node.id, node.name, node.value, node.children)
 
-    return Tree(node)
+    if not leavesNodeInParent:
+      node.parent = None
+      parent.children.remove(node)
 
-  @measure
+    node.children = []
+
+    return new_node
+
   def gen_terminal_paths(self) -> Generator[deque[Node], None, None]:
     """ Generates all paths between terminals in the tree.
 
@@ -97,24 +101,26 @@ class Tree:
       3. There will be yielded combination(leaves, 2) paths for a tree or nearly O(leaves ** 2) pathes.
     """
 
-    nodes = self.__traverse(self.root, False)
+    nodes = self.traverse(self.root, False)
     leaves = filter(lambda node: node.is_terminal, nodes)
 
     for lhs, rhs in combinations(leaves, 2):
       lhs_path, rhs_path = deque(), deque()
 
       while (lhs != rhs):
-        lhs_path.append(lhs)
-        lhs = lhs.parent
+        if lhs.parent != None:
+          lhs_path.append(lhs)
+          lhs = lhs.parent
 
-        rhs_path.appendleft(rhs)
-        rhs = rhs.parent
+        if rhs.parent != None:
+          rhs_path.appendleft(rhs)
+          rhs = rhs.parent
 
       lhs_path.append(lhs)
 
       yield lhs_path + rhs_path
 
-  def __traverse(self, node: Node, validateNode: bool = False) -> Generator[Node, None, None]:
+  def traverse(self, node: Node, validateNode: bool = False) -> Generator[Node, None, None]:
     """ Traversers a tree with bfs and returns all closed nods
 
     Args:
@@ -133,6 +139,8 @@ class Tree:
     while (len(q) != 0):
       node = q.popleft()
 
+      yield node
+
       for child in node.children:
         if validateNode and child in nodes:
           raise Exception("A cycle is in the tree for node")
@@ -140,5 +148,3 @@ class Tree:
         q.append(child)
 
       nodes.append(node)
-
-      yield node

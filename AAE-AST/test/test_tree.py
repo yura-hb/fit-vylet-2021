@@ -39,9 +39,9 @@ def test_cut():
 
   children_count = len(parent.children)
 
-  new_tree = tree.cut(node)
+  new_tree = Tree(tree.cut(node))
 
-  assert new_tree.root == node
+  assert node.children == []
   assert node.parent == None
   assert len(parent.children) == children_count - 1
   assert len(tree) == tree_nodes - 1
