@@ -1,10 +1,8 @@
-from gettext import find
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
   name = 'codevec',
   version = '0.0.1',
   license = 'MIT',
-  package_dir = { "": "." },
-  packages = ["codevec"]
+  packages = find_packages(include=['codevec','codevec.*'])
 )
