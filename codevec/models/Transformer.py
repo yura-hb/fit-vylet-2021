@@ -3,7 +3,6 @@
 # https://github.com/UKPLab/sentence-transformers/blob/master/sentence_transformers/models/Transformer.py
 #
 
-from torch import nn
 from transformers import AutoModel, AutoTokenizer, AutoConfig
 from pytorch_lightning import LightningModule
 from dataclasses import dataclass, field
@@ -11,6 +10,8 @@ from dataclasses import dataclass, field
 from typing import (Dict, Union, List, Tuple)
 
 # TODO: - Implement better handling of the max length in the transformer
+# TODO: - Implement better output type for tokenizer/transformer.
+#         The current one is pretty dumb and can't autoalign itself
 
 class Transformer(LightningModule):
 
