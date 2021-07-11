@@ -28,4 +28,5 @@ class MaxPooling(LightningModule):
     max_vector = torch.max(x.token_embeddings, dim = self.dim).values
 
     x.token_embeddings = max_vector
+
     return x

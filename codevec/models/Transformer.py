@@ -11,10 +11,6 @@ from typing import (Dict, Union, List, Tuple)
 
 from ..utils.Features import *
 
-# TODO: - Implement better handling of the max length in the transformer
-# TODO: - Implement better output type for tokenizer/transformer.
-#         The current one is pretty dumb and can't autoalign itself
-
 class Transformer(LightningModule):
 
   @dataclass
