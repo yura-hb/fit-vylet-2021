@@ -13,12 +13,11 @@ class TestBSSM:
     bert_model = Transformer(config)
 
     tokenized = bert_model.tokenize([text_a, text_b])
+    tokenized_len = tokenized.input_ids.shape[1]
+
     embedding = bert_model(tokenized)
 
-    lhs, rhs = embedding['token_embeddings'][0], embedding['token_embeddings'][1]
-
     bssm = BSSM()
+    vector = bssm(embedding)
 
-    vector = bssm(lhs, rhs)
-
-    assert vector.shape[0] == 9 * lhs.shape[0]
+    assert vector.shape[0] == 9 * tokenized_len

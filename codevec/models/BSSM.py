@@ -2,19 +2,23 @@
 #
 # A method of the vector interaction based on the BSSM paper.
 #
-#
 
 import torch
 from torch import nn
 from torch.nn import functional as F
 from pytorch_lightning import LightningModule
 
+from .MaxPooling import MaxPooling
+from ..utils import Features
+
 class BSSM(LightningModule):
 
   def __init__(self):
     super().__init__()
 
-  def forward(self, x, y):
+    self.pooling = MaxPooling(dim = 2)
+
+  def forward(self, features: Features):
     """ A model will compute the interaction vector based on the paper.
 
     1. Calculate weighed softmax sum
@@ -22,29 +26,35 @@ class BSSM(LightningModule):
     3. Concat to final result
 
     Args:
-        x (tensor): A tensor to perform operations on. Must have shape [x, y]
-        y (tensor): A tensor to perform operations on. Must have shape [x, y]
+        x (tensor): A tensor to perform operations on. Must have shape [x, z], where z is embedding length
+        y (tensor): A tensor to perform operations on. Must have shape [x, z], where z is embedding length
     """
-    assert x.shape == y.shape, "Embeddings must have the same shape."
+    assert len(features.token_embeddings.shape) == 3 and features.token_embeddings.shape[0] == 2, \
+           "Input must have 2 embeddings"
 
-    # [y, x] @ [x, y] = [y, y]
+    # [x, z]
+    x = features.token_embeddings[0]
+    y = features.token_embeddings[1]
+
+    # [z, x] @ [x, z] = [z, z]
     attention = x.T @ y
 
-    # [y, y]
+    # [z, z]
     softmax_x = F.softmax(attention, dim = 1) # By row
     softmax_y = F.softmax(attention, dim = 0) # By column
 
-    # [y, y]
+    # [z, z]
     weighted_x = (softmax_x * torch.sum(y, dim = 0))[:x.shape[0]]
     weighted_y = (softmax_y * torch.sum(x, dim = 0))[:y.shape[0]]
 
-    pool = nn.MaxPool1d(x.shape[1])
-
     # [x]
-    pooled_x = pool(x.view(1, *x.shape)).view(-1)
-    pooled_y = pool(y.view(1, *y.shape)).view(-1)
-    pooled_weighted_x = pool(weighted_x.view(1, *weighted_x.shape)).view(-1)
-    pooled_weighted_y = pool(weighted_y.view(1, *weighted_y.shape)).view(-1)
+    pooled = self.pooling(features)
+    pooled_x, pooled_y = pooled.token_embeddings[0], pooled.token_embeddings[1]
+
+    features.token_embeddings = torch.stack([weighted_x, weighted_y])
+
+    pooled = self.pooling(features)
+    pooled_weighted_x, pooled_weighted_y = pooled.token_embeddings[0], pooled.token_embeddings[1]
 
     # [3 * x]
     concatenated_x = torch.cat([pooled_x, pooled_weighted_x, pooled_x - pooled_weighted_x])

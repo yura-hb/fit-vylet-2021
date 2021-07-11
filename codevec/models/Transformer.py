@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 
 from typing import (Dict, Union, List, Tuple)
 
+from ..utils.Features import *
+
 # TODO: - Implement better handling of the max length in the transformer
 # TODO: - Implement better output type for tokenizer/transformer.
 #         The current one is pretty dumb and can't autoalign itself
@@ -19,6 +21,7 @@ class Transformer(LightningModule):
   class Config:
     model_name: str
     tokenizer_name: str
+    autopad_model_max_len: bool = False
     model_args: Dict = field(default_factory = dict)
     tokenizer_args: Dict = field(default_factory= dict)
 
@@ -33,39 +36,28 @@ class Transformer(LightningModule):
   def __repr__(self):
     return "Transformer({}) with Transformer model: {} ".format(self.config, self.model.__class__.__name__)
 
-  def forward(self, x: Dict):
+  def forward(self, x: Features) -> Features:
     """
     Passes input tensor from the model. The input should be tokenized before forward.
 
     Args:
         x (tensor])
     """
-    assert isinstance(x, dict) and 'input_ids' in x.keys() and 'attention_mask' in x.keys(), \
-           "The input should be a dict with input_ids and attention_mask keys"
 
-    keys = set(['input_ids', 'attention_mask', 'token_type_ids'])
-    filtered_x = { key: value for key, value in x.items() if key in keys }
-
-    output = self.model(**filtered_x, return_dict = True)
+    output = self.model(**x.model_input, return_dict = True)
 
     # [batch, token, embedding]
     states = output[0]
 
-    # CLS is always a first one.
-    cls_token_embedding = states[:, 0, :]
-
-    result = {
-      'token_embeddings': states,
-      'cls_token': cls_token_embedding,
-      'attention_mask': x['attention_mask']
-    }
+    x.token_embeddings = states
+    x.cls_token = states[:, 0, :] # CLS is always a first one.
 
     if self.model.config.output_hidden_states:
-      result.update({ 'hidden_states': output.hidden_states })
+      x.hidden_states = output.hidden_states
 
-    return result
+    return x
 
-  def tokenize(self, texts: Union[List[str], List[Dict], List[Tuple[str, str]]]):
+  def tokenize(self, texts: Union[List[str], List[Dict], List[Tuple[str, str]]]) -> Features:
     """ Tokenizes text features
 
     Args:
@@ -76,11 +68,25 @@ class Transformer(LightningModule):
 
     output, items = self.__parse_tokenizer_input(texts)
 
-    output.update(
-      self.tokenizer(*items, padding = True, truncation = 'longest_first', return_tensors = 'pt')
+    kwargs = {
+      'padding': True,
+      'truncation': 'longest_first',
+      'return_tensors': 'pt'
+    }
+
+    # TODO: Implement
+    if self.config.autopad_model_max_len:
+      kwargs['max_length'] = 20
+
+    output.update(self.tokenizer(*items, **kwargs))
+
+    features = Features(
+      input_ids = output['input_ids'],
+      attention_mask = output['attention_mask'],
+      token_type_ids = output['token_type_ids']
     )
 
-    return output
+    return features
 
   def __parse_tokenizer_input(self, texts: Union[str, List[str], List[Dict], List[Tuple[str, str]]]):
     """ Parsers tokenizer input

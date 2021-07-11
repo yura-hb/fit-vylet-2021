@@ -1,5 +1,6 @@
 import pytest
 from codevec.models.Transformer import *
+from codevec.utils.Features import *
 
 class TestTransformer:
 
@@ -9,19 +10,11 @@ class TestTransformer:
     we were freezed with minus 30 and strong snow. Everything was ok.
     """
 
-    config = Transformer.Config('bert-base-cased', 'bert-base-cased', model_args = { 'output_hidden_states': True })
+    config = Transformer.Config('bert-base-cased', 'bert-base-cased', True, model_args = { 'output_hidden_states': True })
     bert_model = Transformer(config)
 
-    tokenized = bert_model.tokenize([text])
-    embedding = bert_model(tokenized)
+    features = bert_model.tokenize([text])
+    embedding = bert_model(features)
 
-    print(embedding)
-
-    assert isinstance(embedding, dict)
-    assert 'token_embeddings' in embedding.keys()
-    assert 'hidden_states' in embedding.keys()
-    assert 'cls_token' in embedding.keys()
-    assert len(embedding['token_embeddings']) == len(tokenized['input_ids'])
-
-
-
+    assert isinstance(embedding, Features)
+    assert len(embedding.token_embeddings) == len(embedding.input_ids)
