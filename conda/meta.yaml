@@ -1,0 +1,27 @@
+package:
+  name: codevec
+  version: "0.0.1"
+
+source:
+  path: ../
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - transformers
+    - pytorch
+    - pytorch-lightning
+    - sentence-transformers
+    - pip
+  run:
+    - python
+    - transformers
+    - pytorch
+    - pytorch-lightning
+    - sentence-transformers
+
+about:
+  home: git@github.com:yura-hb/fit-vylet-2021.git
+  license: MIT
+  summary: ''
