@@ -21,7 +21,7 @@ class Transformer(LightningModule):
   class Config:
     model_name: str
     tokenizer_name: str
-    autopad_model_max_len: bool = False
+    autocut_model_max_len: bool = False
     model_args: Dict = field(default_factory = dict)
     tokenizer_args: Dict = field(default_factory= dict)
 
@@ -74,9 +74,8 @@ class Transformer(LightningModule):
       'return_tensors': 'pt'
     }
 
-    # TODO: Implement
-    if self.config.autopad_model_max_len:
-      kwargs['max_length'] = 20
+    if self.config.autocut_model_max_len:
+      kwargs['max_length'] = self.transformer_config.max_length
 
     output.update(self.tokenizer(*items, **kwargs))
 
