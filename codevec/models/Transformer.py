@@ -35,7 +35,7 @@ class Transformer(LightningModule):
     self.tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name, **config.tokenizer_args)
 
     if config.evaluate:
-      model.eval()
+      self.model.eval()
 
   def __repr__(self):
     return "Transformer({}) with Transformer model: {} ".format(self.config, self.model.__class__.__name__)
