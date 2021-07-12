@@ -40,9 +40,9 @@ class EmbeddedFeatures:
     tensor_index = tensor(indicies)
 
     return EmbeddedFeatures(
-      token_embeddings = self.token_embeddings.index_select(0, tensor_index),
-      cls_token = self.cls_token.index_select(0, tensor_index),
-      attention_mask = self.attention_mask.index_select(0, tensor_index),
-      hidden_states = self.hidden_states.index_select(0, tensor_index)
+      token_embeddings = self.token_embeddings.index_select(0, tensor_index) if not self.token_embeddings.numel() == 0 else tensor([]),
+      cls_token = self.cls_token.index_select(0, tensor_index) if not self.cls_token.numel() == 0 else tensor([]),
+      attention_mask = self.attention_mask.index_select(0, tensor_index) if not self.attention_mask.numel() == 0 else tensor([]),
+      hidden_states = self.hidden_states.index_select(0, tensor_index) if not self.hidden_states.numel() == 0 else tensor([])
     )
 
