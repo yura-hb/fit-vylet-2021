@@ -5,7 +5,7 @@ from torch import Tensor
 from torch import tensor
 from torch import cat
 
-from typing import Dict
+from typing import Dict, List
 
 @dataclass
 class RawFeatures:
@@ -33,10 +33,16 @@ class EmbeddedFeatures:
   attention_mask: Tensor = field(default = tensor([]))
   hidden_states: Tensor = field(default = tensor([]))
 
-  def trim_output(self):
-    self.token_embeddings = tensor([])
-    self.cls_token = tensor([])
-    self.hidden_states = tensor([])
-
   def trim_hidden_layers(self):
     self.hidden_states = tensor([])
+
+  def at(self, indicies: List[int]):
+    tensor_index = tensor(indicies)
+
+    return EmbeddedFeatures(
+      token_embeddings = self.token_embeddings.index_select(0, tensor_index),
+      cls_token = self.cls_token.index_select(0, tensor_index),
+      attention_mask = self.attention_mask.index_select(0, tensor_index),
+      hidden_states = self.hidden_states.index_select(0, tensor_index)
+    )
+

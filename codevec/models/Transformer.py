@@ -17,6 +17,7 @@ class Transformer(LightningModule):
   class Config:
     model_name: str
     tokenizer_name: str
+    evaluate: bool = True
     output_hidden_states: bool = False
     autocut_model_max_len: bool = False
     model_args: Dict = field(default_factory = dict)
@@ -32,6 +33,9 @@ class Transformer(LightningModule):
     self.transformer_config = AutoConfig.from_pretrained(config.model_name, **config.model_args)
     self.model = AutoModel.from_pretrained(config.model_name, config = self.transformer_config)
     self.tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name, **config.tokenizer_args)
+
+    if config.evaluate:
+      model.eval()
 
   def __repr__(self):
     return "Transformer({}) with Transformer model: {} ".format(self.config, self.model.__class__.__name__)
