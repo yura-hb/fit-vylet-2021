@@ -16,5 +16,6 @@ class TestTransformer:
     features = bert_model.tokenize([text])
     embedding = bert_model(features)
 
-    assert isinstance(embedding, Features)
-    assert len(embedding.token_embeddings) == len(embedding.input_ids)
+    assert isinstance(features, RawFeatures)
+    assert isinstance(embedding, EmbeddedFeatures)
+    assert len(embedding.token_embeddings) == len(features.input_ids)

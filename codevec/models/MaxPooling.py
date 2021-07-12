@@ -1,5 +1,5 @@
 from pytorch_lightning import LightningModule
-from ..utils.Features import Features
+from ..utils.Features import EmbeddedFeatures
 
 import torch
 
@@ -14,7 +14,7 @@ class MaxPooling(LightningModule):
 
     self.dim = dim
 
-  def forward(self, x: Features) -> Features:
+  def forward(self, x: EmbeddedFeatures) -> EmbeddedFeatures:
     """ Pool by attention mask
 
     Args:

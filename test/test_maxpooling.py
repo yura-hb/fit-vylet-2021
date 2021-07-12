@@ -1,7 +1,7 @@
 
 from codevec.models.MaxPooling import MaxPooling
 from codevec.models.Transformer import Transformer
-from codevec.utils.Features import Features
+from codevec.utils.Features import RawFeatures, EmbeddedFeatures
 
 import torch
 
@@ -22,7 +22,7 @@ class TestMaxPooling:
     copy = embedding.token_embeddings.clone()
     embedding_length = copy.shape[2]
 
-    assert row_pooling(embedding).token_embeddings.shape == embedding.input_ids.shape
+    assert row_pooling(embedding).token_embeddings.shape == tokenized.input_ids.shape
 
     embedding.token_embeddings = copy
 

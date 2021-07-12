@@ -17,6 +17,7 @@ class Transformer(LightningModule):
   class Config:
     model_name: str
     tokenizer_name: str
+    output_hidden_states: bool = False
     autocut_model_max_len: bool = False
     model_args: Dict = field(default_factory = dict)
     tokenizer_args: Dict = field(default_factory= dict)
@@ -25,6 +26,9 @@ class Transformer(LightningModule):
     super().__init__()
     self.config = config
 
+    if self.config.output_hidden_states:
+      self.config.model_args['output_hidden_states'] = True
+
     self.transformer_config = AutoConfig.from_pretrained(config.model_name, **config.model_args)
     self.model = AutoModel.from_pretrained(config.model_name, config = self.transformer_config)
     self.tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name, **config.tokenizer_args)
@@ -32,7 +36,7 @@ class Transformer(LightningModule):
   def __repr__(self):
     return "Transformer({}) with Transformer model: {} ".format(self.config, self.model.__class__.__name__)
 
-  def forward(self, x: Features) -> Features:
+  def forward(self, x: RawFeatures) -> EmbeddedFeatures:
     """
     Passes input tensor from the model. The input should be tokenized before forward.
 
@@ -45,15 +49,14 @@ class Transformer(LightningModule):
     # [batch, token, embedding]
     states = output[0]
 
-    x.token_embeddings = states
-    x.cls_token = states[:, 0, :] # CLS is always a first one.
+    embedded = EmbeddedFeatures(states, states[:, 0, :], x.attention_mask)
 
-    if self.model.config.output_hidden_states:
-      x.hidden_states = output.hidden_states
+    if self.config.output_hidden_states:
+      embedded.hidden_states = output.hidden_states
 
-    return x
+    return embedded
 
-  def tokenize(self, texts: Union[List[str], List[Dict], List[Tuple[str, str]]]) -> Features:
+  def tokenize(self, texts: Union[List[str], List[Dict], List[Tuple[str, str]]]) -> RawFeatures:
     """ Tokenizes text features
 
     Args:
@@ -75,7 +78,7 @@ class Transformer(LightningModule):
 
     output.update(self.tokenizer(*items, **kwargs))
 
-    features = Features(
+    features = RawFeatures(
       input_ids = output['input_ids'],
       attention_mask = output['attention_mask'],
       token_type_ids = output['token_type_ids']

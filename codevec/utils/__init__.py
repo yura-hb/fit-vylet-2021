@@ -1,1 +1,1 @@
-from .Features import Features
+from .Features import RawFeatures, EmbeddedFeatures

@@ -9,7 +9,7 @@ from torch.nn import functional as F
 from pytorch_lightning import LightningModule
 
 from .MaxPooling import MaxPooling
-from ..utils import Features
+from ..utils import EmbeddedFeatures
 
 class BSSM(LightningModule):
 
@@ -18,7 +18,7 @@ class BSSM(LightningModule):
 
     self.pooling = MaxPooling(dim = 2)
 
-  def forward(self, features: Features):
+  def forward(self, features: EmbeddedFeatures):
     """ A model will compute the interaction vector based on the paper.
 
     1. Calculate weighed softmax sum
