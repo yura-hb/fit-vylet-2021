@@ -26,6 +26,11 @@ class RawFeatures:
       'token_type_ids': self.token_type_ids
     }
 
+  def to(self, device):
+    self.input_ids.to(device)
+    self.attention_mask.to(device)
+    self.token_type_ids.to(device)
+
 @dataclass
 class EmbeddedFeatures:
   token_embeddings: Tensor = field(default = tensor([]))
@@ -45,4 +50,10 @@ class EmbeddedFeatures:
       attention_mask = self.attention_mask.index_select(0, tensor_index) if not self.attention_mask.numel() == 0 else tensor([]),
       hidden_states = self.hidden_states.index_select(0, tensor_index) if not self.hidden_states.numel() == 0 else tensor([])
     )
+
+  def to(self, device):
+    self.token_embeddings.to(device)
+    self.cls_token.to(device)
+    self.attention_mask.to(device)
+    self.hidden_states.to(device)
 
