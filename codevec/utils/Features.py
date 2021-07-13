@@ -1,11 +1,15 @@
 
 from dataclasses import dataclass, field
+from re import M
 
 from torch import Tensor
 from torch import tensor
 from torch import cat
+from torch import save, load
 
 from typing import Dict, List
+
+import os
 
 @dataclass
 class RawFeatures:
@@ -57,3 +61,37 @@ class EmbeddedFeatures:
     self.attention_mask.to(device)
     self.hidden_states.to(device)
 
+  @staticmethod
+  def read(path: str):
+    """ Reads tensor from directory and filename
+
+    Args:
+        directory (str): A directory to read from
+        filename (str): A filename to read from
+    """
+    assert os.path.isfile(path), "File should exist"
+
+    d = load(path)
+
+    return EmbeddedFeatures(
+      token_embeddings = d['token_embeddings'],
+      cls_token = d['cls_token'],
+      attention_mask = d['attention_mask'],
+      hidden_states = d['hidden_states']
+    )
+
+  def write(self, path: str):
+    """Writes all tensors to a file with the filename
+
+    Args:
+        path(str): path to write file
+    """
+
+    d = {
+      'token_embeddings': self.token_embeddings,
+      'cls_token': self.cls_token,
+      'attention_mask': self.attention_mask,
+      'hidden_states': self.hidden_states
+    }
+
+    save(d, path)
