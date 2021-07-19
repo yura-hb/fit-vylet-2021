@@ -35,6 +35,8 @@ class RawFeatures:
     self.attention_mask.to(device)
     self.token_type_ids.to(device)
 
+    return self
+
 @dataclass
 class EmbeddedFeatures:
   token_embeddings: Tensor = field(default = tensor([]))
@@ -60,6 +62,8 @@ class EmbeddedFeatures:
     self.cls_token.to(device)
     self.attention_mask.to(device)
     self.hidden_states.to(device)
+
+    return self
 
   @staticmethod
   def read(path: str):
