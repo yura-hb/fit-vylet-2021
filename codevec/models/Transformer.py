@@ -11,17 +11,19 @@ from typing import (Dict, Union, List, Tuple)
 
 from ..utils.Features import *
 
+import torch
+
 class Transformer(LightningModule):
 
   @dataclass
   class Config:
     model_name: str
     tokenizer_name: str
-    evaluate: bool = True
     output_hidden_states: bool = False
     autocut_model_max_len: bool = False
     model_args: Dict = field(default_factory = dict)
     tokenizer_args: Dict = field(default_factory= dict)
+    autograd: bool = False
 
   def __init__(self, config: Config):
     super().__init__()
@@ -34,9 +36,6 @@ class Transformer(LightningModule):
     self.model = AutoModel.from_pretrained(config.model_name, config = self.transformer_config)
     self.tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name, **config.tokenizer_args)
 
-    if config.evaluate:
-      self.model.eval()
-
   def __repr__(self):
     return "Transformer({}) with Transformer model: {} ".format(self.config, self.model.__class__.__name__)
 
@@ -47,8 +46,13 @@ class Transformer(LightningModule):
     Args:
         x (tensor])
     """
+    output = None
 
-    output = self.model(**x.model_input, return_dict = True)
+    if self.config.autograd:
+      output = self.model(**x.model_input, return_dict = True)
+    else:
+      with torch.no_grad():
+        output = self.model(**x.model_input, return_dict = True)
 
     # [batch, token, embedding]
     states = output[0]

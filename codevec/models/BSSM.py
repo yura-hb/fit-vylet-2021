@@ -17,6 +17,7 @@ class BSSM(LightningModule):
     super().__init__()
 
     self.pooling = MaxPooling(dim = 2)
+    self.requires_grad_ = False
 
   def forward(self, features: EmbeddedFeatures):
     """ A model will compute the interaction vector based on the paper.
@@ -37,7 +38,7 @@ class BSSM(LightningModule):
     y = features.token_embeddings[1]
 
     # [z, x] @ [x, z] = [z, z]
-    attention = x.T @ y
+    attention = torch.mm(x.T, y)
 
     # [z, z]
     softmax_x = F.softmax(attention, dim = 1) # By row
