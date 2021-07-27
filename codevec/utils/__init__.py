@@ -1,2 +1,4 @@
 from .Features import RawFeatures, EmbeddedFeatures
-from .Analyzer import Analyzer
+from .SimilarityMethod import SimilarityMethod
+from .Plotter import Plotter
+from .Workspace import Workspace
