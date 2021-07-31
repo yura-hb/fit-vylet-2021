@@ -1,9 +1,6 @@
 
 from codevec.models.MaxPooling import MaxPooling
 from codevec.models.Transformer import Transformer
-from codevec.utils.Features import RawFeatures, EmbeddedFeatures
-
-import torch
 
 class TestMaxPooling:
 

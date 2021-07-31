@@ -11,31 +11,161 @@
   flex-wrap: nowrap;
   align-items: flex-start;
   gap: 8px;
-  margin: 16px;
-  background-color: red;
-}
-
-.dropdown-container {
-  flex: 0 0 20vh;
   margin: 8px;
-}
-
-.layer-dropdown {
-  margin: 8px;
-  width: 100%;
-}
-
-.method-dropdown {
-  margin: 8px;
-  width: 100%;
 }
 
 .graph {
   height: 100vh;
+  width: 100%;
+  aspect-ratio: 1;
 }
 
 .graph-container {
-  flex: 0 0 145vh;
+  width: 100%;
   margin-top: 16px;
   height: calc(100vh - 32px);
+}
+
+/* Sidebar */
+
+.sidebar {
+  flex: 0 0 30vh;
+  margin: 8px;
+  background-color: whitesmoke;
+  height: calc(100vh - 32px);
+  border-radius: 8px;
+}
+
+.sidebar-collapsed {
+  margin-left: 8px;
+  height: calc(100vh - 24px);
+  border-radius: 8px;
+  background-color: whitesmoke;
+}
+
+.sidebar-content-container {
+  width: calc(100% - 32px);
+  height: calc(100% - 48px - 16px - 8px);
+
+  margin-top: calc(48px + 16px);
+  margin-left: 16px;
+  margin-right: 16px;
+
+  z-index: 0;
+}
+
+.sidebar-content-container-hidden {
+  display: none;
+}
+
+.sidebar-toggle {
+  float: right;
+  width: 44px;
+  height: 32px;
+  margin: 8px 8px 0px 8px;
+  color: rgba(0, 0, 0, 0.5);
+  border-color: rgba(0, 0, 0, 0.1);
+  background-color: white;
+  border-radius: 8px;
+  border-width: 1px;
+  z-index: 1;
+}
+
+/* Model Selection */
+
+.model-separator {
+  float: right;
+  height: 1px;
+  background-color: slategrey;
+  margin-bottom: 8px;
+  width: calc(100% - 8px);
+}
+
+.model-label {
+  color: slategrey;
+  margin-top: 8px;
+  margin-right: 8px;
+  width: max-content;
+  float: right;
+}
+
+.model-dropdown {
+}
+
+.model-confirm-button {
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* Input Selection */
+
+.input-separator {
+  float: right;
+  height: 1px;
+  background-color: slategrey;
+  margin-bottom: 8px;
+  margin-right: 8px;
+  width: calc(100% - 16px);
+}
+
+.input-label {
+  color: slategrey;
+  margin-top: 8px;
+  margin-right: 8px;
+  width: max-content;
+  float: right;
+}
+
+.input-textarea {
+  height: 50vh;
+  width: calc(100% - 8px);
+  font-size: 13px;
+}
+
+.input-token-info {
+  font-size: 13px;
+}
+
+.input-batch-info {
+  font-size: 13px;
+}
+
+.input-confirm-button {
+  margin-top: 16px;
+  width: 100%;
+}
+
+/* Method Selection */
+
+.method-separator {
+  float: right;
+  height: 1px;
+  background-color: slategrey;
+  margin-bottom: 8px;
+  width: calc(100% - 8px);
+}
+
+.method-label {
+  color: slategrey;
+  margin-top: 8px;
+  margin-right: 8px;
+  width: max-content;
+  float: right;
+}
+
+.method-layer-dropdown {
+  margin-bottom: 8px;
+}
+
+.method-dropdown {
+}
+
+.method-confirm-button {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.method-finish-button {
+  margin-top: 8px;
+  width: 100%;
 }

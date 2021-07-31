@@ -1,5 +1,5 @@
 from pytorch_lightning import LightningModule
-from ..utils.Features import EmbeddedFeatures
+from ..utils import EmbeddedFeatures
 
 import torch
 

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 
 from typing import (Dict, Union, List, Tuple)
 
-from ..utils.Features import *
+from ..utils import RawFeatures, EmbeddedFeatures
 
 import torch
 
@@ -17,12 +17,17 @@ class Transformer(LightningModule):
 
   @dataclass
   class Config:
+
+    @dataclass
+    class SplitConfig:
+      stride: int = 128
+
     model_name: str
     tokenizer_name: str
     output_hidden_states: bool = False
-    autocut_model_max_len: bool = False
-    model_args: Dict = field(default_factory = dict)
-    tokenizer_args: Dict = field(default_factory= dict)
+    split_config: SplitConfig = None
+    model_args: Dict = field(default_factory=dict)
+    tokenizer_args: Dict = field(default_factory=dict)
     autograd: bool = False
 
   def __init__(self, config: Config):
@@ -33,7 +38,7 @@ class Transformer(LightningModule):
       self.config.model_args['output_hidden_states'] = True
 
     self.transformer_config = AutoConfig.from_pretrained(config.model_name, **config.model_args)
-    self.model = AutoModel.from_pretrained(config.model_name, config = self.transformer_config)
+    self.model = AutoModel.from_pretrained(config.model_name, config=self.transformer_config)
     self.tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name, **config.tokenizer_args)
 
   def __repr__(self):
@@ -49,22 +54,22 @@ class Transformer(LightningModule):
     output = None
 
     if self.config.autograd:
-      output = self.model(**x.model_input, return_dict = True)
+      output = self.model(**x.model_input, return_dict=True)
     else:
       with torch.no_grad():
-        output = self.model(**x.model_input, return_dict = True)
+        output = self.model(**x.model_input, return_dict=True)
 
     # [batch, token, embedding]
     states = output[0]
 
-    embedded = EmbeddedFeatures(states, states[:, 0, :], x.attention_mask)
+    embedded = EmbeddedFeatures(states, states[:, 0, :], x.attention_mask, sample_mapping=x.sample_mapping)
 
     if self.config.output_hidden_states:
       embedded.hidden_states = output.hidden_states
 
     return embedded
 
-  def tokenize(self, texts: Union[List[str], List[Dict], List[Tuple[str, str]]]) -> RawFeatures:
+  def tokenize(self, texts: Union[str, List[str]]) -> RawFeatures:
     """ Tokenizes text features
 
     Args:
@@ -73,62 +78,48 @@ class Transformer(LightningModule):
 
     assert len(texts) > 0, "Text should have positive length"
 
-    output, items = self.__parse_tokenizer_input(texts)
+    items = self.__parse_tokenizer_input(texts)
 
     kwargs = {
       'padding': True,
       'truncation': 'longest_first',
-      'return_tensors': 'pt'
+      'return_tensors': 'pt',
+      'max_length': self.transformer_config.max_position_embeddings
     }
 
-    if self.config.autocut_model_max_len:
-      kwargs['max_length'] = self.transformer_config.max_length
+    if self.config.split_config:
+      kwargs['return_overflowing_tokens'] = True
+      kwargs['stride'] = self.config.split_config.stride
+      kwargs['max_length'] = self.transformer_config.max_position_embeddings
 
-    output.update(self.tokenizer(*items, **kwargs))
+    output = self.tokenizer(items, **kwargs)
 
     features = RawFeatures(
-      input_ids = output['input_ids'],
-      attention_mask = output['attention_mask'],
-      token_type_ids = output['token_type_ids']
+      input_ids=output['input_ids'],
+      attention_mask=output['attention_mask'],
+      token_type_ids=output.get('token_type_ids'),
+      sample_mapping=None
     )
+
+    overflow_mapping = torch.zeros(features.input_ids.shape[0]) if output.get('overflow_to_sample_mapping') is None \
+                       else output.get('overflow_to_sample_mapping')
+
+    features.sample_mapping = overflow_mapping
 
     return features
 
-  def __parse_tokenizer_input(self, texts: Union[str, List[str], List[Dict], List[Tuple[str, str]]]):
+  def __parse_tokenizer_input(self, text: Union[str, List[str]]) -> List[str]:
     """ Parsers tokenizer input
 
     Args:
-        texts (Union[List[str], List[Dict], List[Tuple[str, str]]]): texts to encode with transformer
+        texts (Union[str, List[str]]): texts to encode with transformer
 
     Returns:
-        [Tuple[Dict, List]]: Output + texts needed for tokenization.
+        [List[str]]: Output + texts needed for tokenization.
     """
-    output = {}
-    items = []
 
-    if isinstance(texts[0], str):
-      items = [texts]
-      return output, items
+    if isinstance(text, str):
+      items = [text]
+      return items
 
-    if isinstance(texts[0], dict):
-      output['text_keys'] = []
-
-      for text in texts:
-        key, text_value = next(iter(text.items()))
-        items.append(text_value)
-        output['text_keys'].append(key)
-
-      items = [items]
-      return output, items
-
-    if isinstance(texts[0], tuple):
-      first_batch, second_batch = [], []
-
-      for lhs, rhs in texts:
-        first_batch.append(lhs)
-        second_batch.append(rhs)
-
-      items = [first_batch, second_batch]
-      return output, items
-
-    return output, items
+    return text
