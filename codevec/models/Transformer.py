@@ -59,15 +59,7 @@ class Transformer(LightningModule):
       with torch.no_grad():
         output = self.model(**x.model_input, return_dict=True)
 
-    # [batch, token, embedding]
-    states = output[0]
-
-    embedded = EmbeddedFeatures(states, states[:, 0, :], x.attention_mask, sample_mapping=x.sample_mapping)
-
-    if self.config.output_hidden_states:
-      embedded.hidden_states = output.hidden_states
-
-    return embedded
+    return EmbeddedFeatures.from_transformer(x, output, self.config.output_hidden_states)
 
   def tokenize(self, texts: Union[str, List[str]]) -> RawFeatures:
     """ Tokenizes text features
@@ -95,9 +87,9 @@ class Transformer(LightningModule):
     output = self.tokenizer(items, **kwargs)
 
     features = RawFeatures(
-      input_ids=output['input_ids'],
-      attention_mask=output['attention_mask'],
-      token_type_ids=output.get('token_type_ids'),
+      input_ids=output['input_ids'].to(torch.int),
+      attention_mask=output['attention_mask'].to(torch.bool),
+      token_type_ids=output.get('token_type_ids').to(torch.int8),
       sample_mapping=None
     )
 

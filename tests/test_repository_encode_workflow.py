@@ -23,8 +23,6 @@ class TestRepositoryEncodeWorkflow:
   def test_tokenization(self):
     wd = os.getcwd()
 
-    os.chdir(self.cache_dir)
-
     filenames, config, map_path, tokens_dir_path, _ = self.tokenize(False)
 
     _filenames = set()
@@ -45,11 +43,16 @@ class TestRepositoryEncodeWorkflow:
 
     os.chdir(wd)
 
-  @pytest.mark.skip(reason="Extremely long time on CPU, enable GPU to test this")
+  #@pytest.mark.skip(reason="Extremely long time on CPU, enable GPU to test this")
   def test_embedding_generation(self):
     """
     Warning: Test only on GPU, tests on CPU will take extremely long time to complete
     """
+    wd = os.getcwd()
+
+    self.tokenize(True)
+
+    os.chdir(wd)
     assert False
     pass
 
@@ -57,13 +60,15 @@ class TestRepositoryEncodeWorkflow:
     split_config = Transformer.Config.SplitConfig(128)
     config = Transformer.Config('bert-base-cased',
                                 'bert-base-cased',
-                                True,
+                                output_hidden_states=False,
                                 split_config=split_config,
-                                model_args={'output_hidden_states': False})
+                                model_args={'output_hidden_states': False},
+                                autograd=False)
     bert_model = Transformer(config)
 
     transformer_workflow_config = TransformerEncodeWorkflow.Config(transformer=bert_model,
-                                                                   generate_embedding=generate_embedding)
+                                                                   generate_embedding=generate_embedding,
+                                                                   embedding_batch_size=1)
 
     config = RepositoryEncodeWorkflow.Config(repository_url='git@github.com:iluwatar/java-design-patterns.git',
                                              output_dir=self.cache_dir,
@@ -73,11 +78,11 @@ class TestRepositoryEncodeWorkflow:
 
     workflow.run()
 
+    os.chdir(self.cache_dir)
+
     map_path = os.getcwd() + '/' + transformer_workflow_config.output_dir + '/' + transformer_workflow_config.map_filename
     tokens_dir_path = transformer_workflow_config.output_dir + '/' + transformer_workflow_config.tokens_dir
     embedding_path = transformer_workflow_config.output_dir + '/' + transformer_workflow_config.embedding_dir
-
-    print(map_path)
 
     assert os.path.exists(map_path)
     assert os.path.exists(tokens_dir_path)

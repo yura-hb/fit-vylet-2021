@@ -15,15 +15,15 @@ class TransformerEncodeWorkflow:
 
   @dataclass
   class Config:
-    output_dir = 'embedded'
-    tokens_dir = 'tokens'
-    embedding_dir = 'embedding'
-    map_filename = 'map.json'
+    output_dir: str = 'embedded'
+    tokens_dir: str = 'tokens'
+    embedding_dir: str = 'embedding'
+    map_filename: str = 'map.json'
     transformer: Transformer = None
     device: str = 'cpu'
     generate_embedding: bool = False
-    tokenize_batch_size = 128
-    embedding_batch_size = 128
+    tokenize_batch_size: int = 128
+    embedding_batch_size: int = 128
 
   def __init__(self, config, filenames):
     self.config = config
@@ -97,10 +97,10 @@ class TransformerEncodeWorkflow:
       gc.collect()
       torch.cuda.empty_cache()
 
-      encoded = self.config.transformer(batch).to('cpu')
+      encoded = self.config.transformer(batch.to(self.config.device)).to('cpu')
 
       for embedding in encoded.iterate_samples():
-        path = self.__make_embedding_path(embedding.sample_mapping[0])
+        path = self.__make_embedding_path(int(embedding.sample_mapping[0]))
 
         if os.path.exists(path):
           features = EmbeddedFeatures.read(path)
@@ -138,7 +138,7 @@ class TransformerEncodeWorkflow:
       path = self.__make_tokens_path(index)
 
       features = RawFeatures.read(path)
-      features.sample_mapping = index
+      features.sample_mapping[True] = index
 
       # Merge of single file can produce a lot of blocks
       buffered.merge(features)

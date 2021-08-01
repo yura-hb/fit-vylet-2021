@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 
+import torch
 from torch import Tensor, tensor, cat, save, load, max, unique, sum, zeros
 
 from typing import Dict, List
@@ -8,11 +9,11 @@ import os
 
 @dataclass
 class EmbeddedFeatures:
-  token_embeddings: Tensor = field(default = tensor([])) #[BATCH, IDX, EMBEDDING_LEN]
-  cls_token: Tensor = field(default = tensor([])) #[BATCH, EMBEDDING_LENGTH]
-  attention_mask: Tensor = field(default = tensor([])) #[BATCH, IDX, EMBEDDING_LEN]
-  hidden_states: Tensor = field(default = tensor([])) #[LAYER, BATCH, IDX, EMBEDDING_LEN]
-  sample_mapping: Tensor = field(default=tensor([])) # [BATCH]
+  token_embeddings: Tensor = field(default = tensor([], dtype=torch.float16)) #[BATCH, IDX, EMBEDDING_LEN]
+  cls_token: Tensor = field(default = tensor([], dtype=torch.float16)) #[BATCH, EMBEDDING_LENGTH]
+  attention_mask: Tensor = field(default = tensor([], dtype=torch.bool)) #[BATCH, IDX, EMBEDDING_LEN]
+  hidden_states: Tensor = field(default = tensor([], dtype=torch.float16)) #[LAYER, BATCH, IDX, EMBEDDING_LEN]
+  sample_mapping: Tensor = field(default=tensor([], dtype=torch.int)) # [BATCH]
 
   def __len__(self):
     return self.token_embeddings.shape[0]
@@ -22,7 +23,7 @@ class EmbeddedFeatures:
     self.attention_mask = cat([self.attention_mask, features.attention_mask])
     self.cls_token = cat([self.cls_token, features.cls_token])
     self.sample_mapping = cat([self.sample_mapping, features.sample_mapping])
-    self.hidden_states = cat([self.hidden_states, features.hidden_states])
+    self.hidden_states = cat([self.hidden_states, features.hidden_states], dim = 1)
 
   def trim_hidden_layers(self):
     self.hidden_states = tensor([])
@@ -44,15 +45,14 @@ class EmbeddedFeatures:
       sample_mapping = self.sample_mapping.index_select(0, tensor_index) if not self.sample_mapping.numel() == 0 else tensor([])
     )
 
-
   def iterate_samples(self):
     for sample in unique(self.sample_mapping):
       yield EmbeddedFeatures(
         token_embeddings=self.token_embeddings[self.sample_mapping == sample],
         attention_mask=self.attention_mask[self.sample_mapping == sample],
         cls_token=self.cls_token[self.sample_mapping == sample],
-        hidden_states=self.hidden_states[self.sample_mapping == sample] if not self.hidden_states.numel() == 0 else tensor([]),
-        sample_mapping=zeros(sum(self.sample_mapping[self.sample_mapping == sample]) + sample),
+        hidden_states=self.hidden_states[:, self.sample_mapping == sample] if not self.hidden_states.numel() == 0 else tensor([]),
+        sample_mapping=zeros(self.sample_mapping[self.sample_mapping == sample].numel()) + sample,
       )
 
   def to(self, device):
@@ -102,3 +102,17 @@ class EmbeddedFeatures:
     }
 
     save(d, path)
+
+  @staticmethod
+  def from_transformer(raw_features, output, include_hidden_states: bool):
+    states = output[0]
+
+    embedded = EmbeddedFeatures(token_embeddings=states.to(torch.float16),
+                                cls_token=states[:, 0, :].to(torch.float16),
+                                attention_mask=raw_features.attention_mask.to(torch.bool),
+                                sample_mapping=raw_features.sample_mapping.to(torch.int))
+
+    if include_hidden_states:
+      embedded.hidden_states = torch.stack(list(output.hidden_states), dim = 0).to(torch.float16)
+
+    return embedded
