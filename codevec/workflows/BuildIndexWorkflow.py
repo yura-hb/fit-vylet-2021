@@ -1,7 +1,7 @@
 
 from codevec.utils import RawFeatures, EmbeddedFeatures
 
-import shutil, os, glob
+import shutil, os, glob, time
 
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -47,7 +47,13 @@ class BuildIndexWorkflow:
     iterator = iter(token_files)
 
     for batch in self.__batched(iterator, self.config.processing_batch_size):
+      print('Start embedding generation of batch of {} blocks'.format(len(batch)))
+      start = time.process_time()
+
       self.__build_index(batch)
+
+      end = time.process_time()
+      print('End indexing of batch of {} files and time {}'.format(len(batch), end - start))
 
   def __build_index(self, filenames: List[str]):
     token_filenames = [self.config.tokens_dir + '/' + filename for filename in filenames]
@@ -67,7 +73,6 @@ class BuildIndexWorkflow:
 
     for token in tokens:
       if token > 0:
-        print(token)
         mask = torch.logical_and(raw_features.input_ids == token, raw_features.attention_mask == 1)
 
         embedding = embedded_features.token_embeddings[mask]
