@@ -45,8 +45,6 @@ class RawFeatures:
     if self.token_type_ids.numel() > 0:
       input.update({ 'token_type_ids': self.token_type_ids })
 
-    print(self.input_ids.shape, self.attention_mask.shape)
-
     return input
 
   def to(self, device):
@@ -98,8 +96,6 @@ class RawFeatures:
     assert os.path.isfile(path), "File should exist"
 
     d = load(path)
-
-    print(d.keys())
 
     return RawFeatures(
       input_ids=d['input_ids'].to(torch.int),
