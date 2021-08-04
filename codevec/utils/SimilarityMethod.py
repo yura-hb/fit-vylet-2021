@@ -17,7 +17,7 @@ class SimilarityMethod:
     pass
 
   @staticmethod
-  def pca(embedded: EmbeddedFeatures, layer: int) -> Generator[int, npt.ArrayLike, None]:
+  def pca(embedded: EmbeddedFeatures, layer: int = None) -> Generator[int, npt.ArrayLike, None]:
     """Compute PCA decomposition
 
     Args:
@@ -40,7 +40,7 @@ class SimilarityMethod:
       yield pca
 
   @staticmethod
-  def cosine_sim_sentence(embedded: EmbeddedFeatures, layer: int) -> Generator[int, npt.ArrayLike, None]:
+  def cosine_sim_sentence(embedded: EmbeddedFeatures, layer: int = None) -> Generator[int, npt.ArrayLike, None]:
     """ Calculates a cosine similarity between each pair of words in the embedding.
 
     Args:

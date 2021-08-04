@@ -1,2 +1,3 @@
 from .RepositoryEncodeWorkflow import RepositoryEncodeWorkflow
 from .TransformerEncodeWorkflow import TransformerEncodeWorkflow
+from .BuildIndexWorkflow import BuildIndexWorkflow
