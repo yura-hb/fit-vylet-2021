@@ -23,6 +23,40 @@ class TestTransformer:
     assert isinstance(embedding, EmbeddedFeatures)
     assert len(embedding.token_embeddings) == len(features.input_ids)
 
+  def test_roberta_model_encoding(self):
+    text = """
+    Yesterday was a beautiful day. In the morning it was 30 degrees hot. In the afternoon it was raining and in the evening
+    we were freezed with minus 30 and strong snow. Everything was ok.
+    """
+
+    config = Transformer.Config('roberta-base', 'roberta-base', True, model_args = { 'output_hidden_states': False })
+    bert_model = Transformer(config)
+
+    features = bert_model.tokenize(text)
+    embedding = bert_model(features)
+
+    assert isinstance(features, RawFeatures)
+    assert isinstance(embedding, EmbeddedFeatures)
+    assert len(embedding.token_embeddings) == len(features.input_ids)
+
+  def test_gpt2_model_encoding(self):
+    text = """
+    Yesterday was a beautiful day. In the morning it was 30 degrees hot. In the afternoon it was raining and in the evening
+    we were freezed with minus 30 and strong snow. Everything was ok.
+    """
+
+    config = Transformer.Config('gpt2', 'gpt2', True,
+                                model_args = { 'output_hidden_states': False },
+                                requires_additional_pad_token=True)
+    bert_model = Transformer(config)
+
+    features = bert_model.tokenize(text)
+    embedding = bert_model(features)
+
+    assert isinstance(features, RawFeatures)
+    assert isinstance(embedding, EmbeddedFeatures)
+    assert len(embedding.token_embeddings) == len(features.input_ids)
+
   def test_bert_multiple_file_encoding(self):
     text = """
         Yesterday was a beautiful day. In the morning it was 30 degrees hot. In the afternoon it was raining and in 

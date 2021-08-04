@@ -29,6 +29,7 @@ class Transformer(LightningModule):
     model_args: Dict = field(default_factory=dict)
     tokenizer_args: Dict = field(default_factory=dict)
     autograd: bool = False
+    requires_additional_pad_token: bool = False
 
   def __init__(self, config: Config):
     super().__init__()
@@ -40,6 +41,9 @@ class Transformer(LightningModule):
     self.transformer_config = AutoConfig.from_pretrained(config.model_name, **config.model_args)
     self.model = AutoModel.from_pretrained(config.model_name, config=self.transformer_config)
     self.tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name, **config.tokenizer_args)
+
+    if config.requires_additional_pad_token:
+      self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
   def __repr__(self):
     return "Transformer({}) with Transformer model: {} ".format(self.config, self.model.__class__.__name__)
@@ -89,7 +93,7 @@ class Transformer(LightningModule):
     features = RawFeatures(
       input_ids=output['input_ids'].to(torch.int),
       attention_mask=output['attention_mask'].to(torch.bool),
-      token_type_ids=output.get('token_type_ids').to(torch.int8),
+      token_type_ids=output.get('token_type_ids').to(torch.int8) if 'token_type_ids' in output.keys() else torch.tensor([]),
       sample_mapping=None
     )
 

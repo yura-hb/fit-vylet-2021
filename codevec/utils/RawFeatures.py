@@ -37,16 +37,22 @@ class RawFeatures:
 
   @property
   def model_input(self) -> Dict:
-    return {
+    input = {
       'input_ids': self.input_ids,
       'attention_mask': self.attention_mask,
-      'token_type_ids': self.token_type_ids
     }
+
+    if self.token_type_ids.numel() > 0:
+      input.update({ 'token_type_ids': self.token_type_ids })
+
+    return input
 
   def to(self, device):
     self.input_ids = self.input_ids.to(device)
     self.attention_mask = self.attention_mask.to(device)
-    self.token_type_ids = self.token_type_ids.to(device)
+
+    if self.token_type_ids:
+      self.token_type_ids = self.token_type_ids.to(device)
 
     return self
 
@@ -55,9 +61,8 @@ class RawFeatures:
       yield RawFeatures(
         input_ids=self.input_ids[self.sample_mapping == sample],
         attention_mask=self.attention_mask[self.sample_mapping == sample],
-        token_type_ids=self.token_type_ids[self.sample_mapping == sample],
+        token_type_ids=self.token_type_ids[self.sample_mapping == sample] if self.token_type_ids.numel() > 0 else tensor([]),
         sample_mapping=zeros(self.sample_mapping[self.sample_mapping == sample].numel()) + sample)
-
 
 
   def at(self, indicies: List[int]):
@@ -95,7 +100,7 @@ class RawFeatures:
     return RawFeatures(
       input_ids=d['input_ids'].to(torch.int),
       attention_mask=d['attention_mask'].to(torch.int),
-      token_type_ids=d['token_type_ids'].to(torch.int),
+      token_type_ids=d.get(['token_type_ids']).to(torch.int) if 'token_type_ids' in d.keys() else tensor([]),
       sample_mapping=d.get('overflow_to_sample_mapping').to(torch.int) if 'overflow_to_sample_mapping' in d.keys() else tensor([])
     )
 
