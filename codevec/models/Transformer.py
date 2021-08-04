@@ -86,7 +86,7 @@ class Transformer(LightningModule):
     if self.config.split_config:
       kwargs['return_overflowing_tokens'] = True
       kwargs['stride'] = self.config.split_config.stride
-      kwargs['max_length'] = self.transformer_config.max_position_embeddings
+      kwargs['max_length'] = self.tokenizer.model_max_length
 
     output = self.tokenizer(items, **kwargs)
 

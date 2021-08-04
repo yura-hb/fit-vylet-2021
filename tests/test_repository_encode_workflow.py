@@ -58,8 +58,8 @@ class TestRepositoryEncodeWorkflow:
 
   def tokenize(self, generate_embedding: bool):
     split_config = Transformer.Config.SplitConfig(128)
-    config = Transformer.Config('bert-base-cased',
-                                'bert-base-cased',
+    config = Transformer.Config('xlm-roberta-base',
+                                'xlm-roberta-base',
                                 output_hidden_states=False,
                                 split_config=split_config,
                                 model_args={'output_hidden_states': False},

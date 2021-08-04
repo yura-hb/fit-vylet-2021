@@ -45,13 +45,15 @@ class RawFeatures:
     if self.token_type_ids.numel() > 0:
       input.update({ 'token_type_ids': self.token_type_ids })
 
+    print(self.input_ids.shape, self.attention_mask.shape)
+
     return input
 
   def to(self, device):
     self.input_ids = self.input_ids.to(device)
     self.attention_mask = self.attention_mask.to(device)
 
-    if self.token_type_ids:
+    if self.token_type_ids.numel() > 0:
       self.token_type_ids = self.token_type_ids.to(device)
 
     return self
@@ -97,10 +99,12 @@ class RawFeatures:
 
     d = load(path)
 
+    print(d.keys())
+
     return RawFeatures(
       input_ids=d['input_ids'].to(torch.int),
       attention_mask=d['attention_mask'].to(torch.int),
-      token_type_ids=d.get(['token_type_ids']).to(torch.int) if 'token_type_ids' in d.keys() else tensor([]),
+      token_type_ids=d.get('token_type_ids').to(torch.int) if 'token_type_ids' in d.keys() else tensor([]),
       sample_mapping=d.get('overflow_to_sample_mapping').to(torch.int) if 'overflow_to_sample_mapping' in d.keys() else tensor([])
     )
 
