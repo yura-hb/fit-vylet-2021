@@ -47,7 +47,7 @@ class BuildIndexWorkflow:
     iterator = iter(token_files)
 
     for batch in self.__batched(iterator, self.config.processing_batch_size):
-      print('Start embedding generation of batch of {} blocks'.format(len(batch)))
+      print('Start indexing of batch of {} files'.format(len(batch)))
       start = time.process_time()
 
       self.__build_index(batch)

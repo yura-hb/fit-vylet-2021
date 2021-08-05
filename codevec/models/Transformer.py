@@ -86,7 +86,7 @@ class Transformer(LightningModule):
     if self.config.split_config:
       kwargs['return_overflowing_tokens'] = True
       kwargs['stride'] = self.config.split_config.stride
-      kwargs['max_length'] = self.tokenizer.model_max_length
+      kwargs['max_length'] = min(self.tokenizer.model_max_length, self.transformer_config.max_position_embeddings)
 
     output = self.tokenizer(items, **kwargs)
 
@@ -94,7 +94,7 @@ class Transformer(LightningModule):
       input_ids=output['input_ids'].to(torch.int),
       attention_mask=output['attention_mask'].to(torch.bool),
       token_type_ids=output.get('token_type_ids').to(torch.int8) if 'token_type_ids' in output.keys() else torch.tensor([]),
-      sample_mapping=None
+      sample_mapping=torch.tensor([])
     )
 
     overflow_mapping = torch.zeros(features.input_ids.shape[0]) if output.get('overflow_to_sample_mapping') is None \
@@ -108,7 +108,7 @@ class Transformer(LightningModule):
     """ Parsers tokenizer input
 
     Args:
-        texts (Union[str, List[str]]): texts to encode with transformer
+        text (Union[str, List[str]]): texts to encode with transformer
 
     Returns:
         [List[str]]: Output + texts needed for tokenization.
