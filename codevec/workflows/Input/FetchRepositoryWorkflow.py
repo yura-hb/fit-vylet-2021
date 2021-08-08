@@ -1,5 +1,4 @@
 
-from codevec.workflows.TransformerEncodeWorkflow import TransformerEncodeWorkflow
 from dataclasses import dataclass
 
 import os
