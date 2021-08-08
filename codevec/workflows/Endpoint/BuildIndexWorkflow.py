@@ -47,7 +47,7 @@ class BuildIndexWorkflow(AnyWorkflow):
       print('Start indexing of batch of {} files'.format(len(batch)))
       start = time.process_time()
 
-      self.__build_index(tokens_dir, embedding_dir, batch)
+      self.__build_index(tokens_dir, embedding_dir, batch, self.config)
 
       end = time.process_time()
       print('End indexing of batch of {} files and time {}'.format(len(batch), end - start))
