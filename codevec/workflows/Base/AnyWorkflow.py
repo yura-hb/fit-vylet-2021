@@ -28,7 +28,7 @@ class AnyWorkflow:
 
     while current:
       print('Start running workflow with name {}'.format(type(current)))
-      current.run(ctx)
+      current.run()
       print('End running workflow with name {}'.format(type(current)))
 
       ctx.update(current.global_ctx)
