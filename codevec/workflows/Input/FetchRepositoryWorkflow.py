@@ -5,14 +5,13 @@ from dataclasses import dataclass
 import os
 import subprocess
 import glob
-from typing import List
+from typing import List, Set
 
 import shutil
 
-class RepositoryEncodeWorkflow:
-  """
-  A helper class to fetch/tokenize/embedded git repository
-  """
+from ..Base import AnyWorkflow
+
+class FetchRepositoryWorkflow(AnyWorkflow):
 
   @dataclass
   class Config:
@@ -22,13 +21,12 @@ class RepositoryEncodeWorkflow:
 
     output_dir: str = 'cache_dir'
 
-  def __init__(self, config):
+  def __init__(self, config: Config):
     super().__init__()
 
     self.config = config
 
-  def run(self):
-    # Recreate directory
+  def run(self, ctx):
     if os.path.exists(self.config.output_dir):
       shutil.rmtree(self.config.output_dir, ignore_errors=True)
 
@@ -39,27 +37,22 @@ class RepositoryEncodeWorkflow:
     os.chdir(self.config.output_dir)
 
     try:
-      self.__clone()
-      self.__make_index()
+      self.__clone(self.config)
+      filenames = self.__make_index(self.config)
 
-      transformer_workflow = TransformerEncodeWorkflow(self.config.transformer_workflow_config,
-                                                       filenames=self._filenames)
-
-      transformer_workflow.run()
+      self.global_ctx.update(dict(processing_filenames = filenames))
 
       os.chdir(wd)
     except Exception as exc:
       os.chdir(wd)
 
       raise exc
+    pass
 
-  #
-  # Utils
-  #
-
-  def __clone(self) -> None:
+  @staticmethod
+  def __clone(config: Config) -> None:
     # Call Git to clone repository
-    process = subprocess.Popen(['git', 'clone', '--depth', '1', '--single-branch', self.config.repository_url],
+    process = subprocess.Popen(['git', 'clone', '--depth', '1', '--single-branch', config.repository_url],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
@@ -68,9 +61,12 @@ class RepositoryEncodeWorkflow:
     if process.returncode:
       raise RuntimeError('Couldn\'t clone repository with code {}'.format(process.returncode))
 
-  def __make_index(self):
+  @staticmethod
+  def __make_index(config: Config) -> Set[str]:
     # Get filenames index
-    self._filenames = set()
+    filenames = set()
 
-    for regex in self.config.file_regexes:
-      self._filenames.update(glob.glob(regex, recursive=True))
+    for regex in config.file_regexes:
+      filenames.update(glob.glob(regex, recursive=True))
+
+    return filenames

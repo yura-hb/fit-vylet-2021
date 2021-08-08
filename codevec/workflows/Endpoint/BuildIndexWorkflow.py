@@ -1,4 +1,3 @@
-
 from codevec.utils import RawFeatures, EmbeddedFeatures
 
 import shutil, os, glob, time
@@ -9,16 +8,18 @@ from typing import List, Generator
 
 import torch
 
-class BuildIndexWorkflow:
+from ..Base import AnyWorkflow
+
+class BuildIndexWorkflow(AnyWorkflow):
   """
-  A simple workflow, which groups embeddings by tokens to analyze specific tokens.
+  IN: tokens_dir[str]
+  IN: embedding_dir[str]
+  OUT: None
   """
 
   @dataclass
   class Config:
-
-    embedding_dir: str
-    tokens_dir: str
+    working_dir: str = 'embedded'
     output_dir: str = 'indexed'
 
     token_regex: str = "*.pt"
@@ -28,21 +29,20 @@ class BuildIndexWorkflow:
 
     tokens: torch.Tensor = field(default = torch.tensor([], dtype=torch.int))
 
-  def __init__(self, config: str):
+  def __init__(self, config: Config):
+    super().__init__()
+
     self.config = config
 
-  def run(self):
-    # Recreate directory
-    if os.path.exists(self.config.output_dir):
-      shutil.rmtree(self.config.output_dir, ignore_errors=True)
+  def run(self, ctx):
+    assert 'tokens_dir' in ctx.keys(), "Tokens directory must be set"
+    assert 'embedding_dir' in ctx.keys(), "Tokens directory must be set"
 
-    os.mkdir(self.config.output_dir)
+    tokens_dir = ctx['tokens_dir']
+    embedding_dir = ctx['embedding_dir']
 
-    assert os.path.exists(self.config.tokens_dir), "Tokens must exist in the repository"
-    assert os.path.exists(self.config.embedding_dir), "Embeddings must exist in the repository"
-
-    token_files = glob.glob(self.config.tokens_dir + '/' + self.config.token_regex)
-    token_files = [file[len(self.config.tokens_dir) + 1:]  for file in token_files]
+    token_files = glob.glob(tokens_dir + '/' + self.config.token_regex)
+    token_files = [file[len(tokens_dir) + 1:]  for file in token_files]
 
     iterator = iter(token_files)
 
@@ -50,14 +50,15 @@ class BuildIndexWorkflow:
       print('Start indexing of batch of {} files'.format(len(batch)))
       start = time.process_time()
 
-      self.__build_index(batch)
+      self.__build_index(tokens_dir, embedding_dir, batch)
 
       end = time.process_time()
       print('End indexing of batch of {} files and time {}'.format(len(batch), end - start))
 
-  def __build_index(self, filenames: List[str]):
-    token_filenames = [self.config.tokens_dir + '/' + filename for filename in filenames]
-    embedding_filenames = [self.config.embedding_dir + '/' + filename for filename in filenames]
+  @staticmethod
+  def __build_index(tokens_dir: str, embedding_dir: str, filenames: List[str], config: Config):
+    token_filenames = [tokens_dir + '/' + filename for filename in filenames]
+    embedding_filenames = [embedding_dir + '/' + filename for filename in filenames]
 
     raw_features = RawFeatures()
 
@@ -69,7 +70,7 @@ class BuildIndexWorkflow:
     for embedding_filename in embedding_filenames:
       embedded_features.merge(EmbeddedFeatures.read(embedding_filename))
 
-    tokens = self.config.tokens if self.config.tokens.numel() > 0 else torch.unique(raw_features.input_ids)
+    tokens = config.tokens if config.tokens.numel() > 0 else torch.unique(raw_features.input_ids)
 
     for token in tokens:
       if token > 0:
@@ -86,15 +87,15 @@ class BuildIndexWorkflow:
 
         now = datetime.now()
         timestamp = str(now.strftime("%Y%m%d_%H:%M:%S"))
-        dir = self.config.output_dir + '/' + str(int(token)) + '/'
+        dir = config.working_dir + '/' + str(int(token)) + '/'
         path = dir + timestamp + '.pt'
 
         os.makedirs(dir, exist_ok=True)
 
         result.write(path)
 
-
-  def __batched(self, iterator, count) -> Generator[int, List[str], None]:
+  @staticmethod
+  def __batched(iterator, count) -> Generator[int, List[str], None]:
     buffer = []
 
     for element in iterator:

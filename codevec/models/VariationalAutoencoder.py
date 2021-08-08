@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 
+from typing import Tuple
+
 class VariationalAutoEncoder(LightningModule):
 
   @dataclass
@@ -33,13 +35,7 @@ class VariationalAutoEncoder(LightningModule):
 
   def training_step(self, batch, batch_idx):
     x, _ = batch
-
-    encoded = self.encoder(batch)
-    mu, var = self.mu(encoded), self.var(encoded)
-
-    std = torch.exp(var / 2)
-    q = torch.distributions.Normal(mu, std)
-    z = q.rsample()
+    z, mu, _, std = self.get_latent_encoding(x)
 
     decoded = self.decoder(z)
 
@@ -50,6 +46,17 @@ class VariationalAutoEncoder(LightningModule):
     elbo = elbo.mean()
 
     return elbo
+
+  def get_latent_encoding(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor,
+                                                          torch.Tensor, torch.Tensor]:
+    encoded = self.encoder(x)
+    mu, var = self.mu(encoded), self.var(encoded)
+
+    std = torch.exp(var / 2)
+    q = torch.distributions.Normal(mu, std)
+    z = q.rsample()
+
+    return (z, mu, var, std)
 
   def configure_optimizers(self):
     return torch.optim.Adam(self.parameters(), lr=self.config.learning_rate)
