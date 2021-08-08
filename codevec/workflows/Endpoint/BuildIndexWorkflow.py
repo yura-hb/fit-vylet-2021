@@ -84,7 +84,7 @@ class BuildIndexWorkflow(AnyWorkflow):
 
         now = datetime.now()
         timestamp = str(now.strftime("%Y%m%d_%H:%M:%S"))
-        dir = config.working_dir + '/' + str(int(token)) + '/'
+        dir = config.working_dir + '/' + config.output_dir + '/' + str(int(token)) + '/'
         path = dir + timestamp + '.pt'
 
         os.makedirs(dir, exist_ok=True)
