@@ -80,7 +80,7 @@ class Transformer(LightningModule):
       'padding': True,
       'truncation': 'longest_first',
       'return_tensors': 'pt',
-      'max_length': self.transformer_config.max_position_embeddings
+      'max_length': min(self.tokenizer.model_max_length, self.transformer_config.max_position_embeddings)
     }
 
     if self.config.split_config:

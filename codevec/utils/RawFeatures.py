@@ -38,12 +38,12 @@ class RawFeatures:
   @property
   def model_input(self) -> Dict:
     input = {
-      'input_ids': self.input_ids,
-      'attention_mask': self.attention_mask,
+      'input_ids': self.input_ids.to(torch.int32),
+      'attention_mask': self.attention_mask.to(torch.int32),
     }
 
     if self.token_type_ids.numel() > 0:
-      input.update({ 'token_type_ids': self.token_type_ids })
+      input.update({ 'token_type_ids': self.token_type_ids.to(torch.int32) })
 
     return input
 
