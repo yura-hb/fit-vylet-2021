@@ -17,7 +17,7 @@ class AnyWorkflow:
     return workflow
 
   def execute(self):
-    root = self.parent
+    root = self.parent or self
 
     while root.parent:
       root = root.parent
