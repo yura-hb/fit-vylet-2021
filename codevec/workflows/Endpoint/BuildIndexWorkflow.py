@@ -34,12 +34,9 @@ class BuildIndexWorkflow(AnyWorkflow):
 
     self.config = config
 
-  def run(self, ctx):
-    assert 'tokens_dir' in ctx.keys(), "Tokens directory must be set"
-    assert 'embedding_dir' in ctx.keys(), "Tokens directory must be set"
-
-    tokens_dir = ctx['tokens_dir']
-    embedding_dir = ctx['embedding_dir']
+  def run(self):
+    tokens_dir = self.get_from_ctx('tokens_dir')
+    embedding_dir = self.get_from_ctx('embedding_dir')
 
     token_files = glob.glob(tokens_dir + '/' + self.config.token_regex)
     token_files = [file[len(tokens_dir) + 1:]  for file in token_files]

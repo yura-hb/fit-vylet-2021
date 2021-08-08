@@ -34,18 +34,15 @@ class GenerateEmbeddingWorkflow(AnyWorkflow):
 
     self.config = config
 
-  def run(self, ctx):
-    assert 'tokens_info' in ctx.keys(), "Tokens directory must be set"
-    assert 'tokens_dir' in ctx.keys(), "Tokens directory must be set"
-
-    tokens_info = ctx['tokens_info']
-    tokens_dir = ctx['tokens_dir']
+  def run(self):
+    tokens_info = self.get_from_ctx('tokens_info')
+    tokens_dir = self.get_from_ctx('tokens_dir')
 
     os.mkdir(self.config.working_dir + '/' + self.config.embedding_dir)
 
     self.__gen_embedding(tokens_dir, tokens_info, self.config)
 
-    self.global_ctx.update(dict(embedding_dir = self.config.working_dir + '/' + self.config.embedding_dir))
+    self.update_ctx(dict(embedding_dir = self.config.working_dir + '/' + self.config.embedding_dir))
 
   @staticmethod
   def __gen_embedding(tokens_dir: str, file_info: pd.DataFrame, config: Config):

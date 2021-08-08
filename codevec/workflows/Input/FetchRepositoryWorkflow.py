@@ -26,7 +26,7 @@ class FetchRepositoryWorkflow(AnyWorkflow):
 
     self.config = config
 
-  def run(self, ctx):
+  def run(self):
     if os.path.exists(self.config.output_dir):
       shutil.rmtree(self.config.output_dir, ignore_errors=True)
 
@@ -40,7 +40,7 @@ class FetchRepositoryWorkflow(AnyWorkflow):
       self.__clone(self.config)
       filenames = self.__make_index(self.config)
 
-      self.global_ctx.update(dict(processing_filenames = filenames))
+      self.update_ctx(dict(processing_filenames = filenames))
 
       os.chdir(wd)
     except Exception as exc:

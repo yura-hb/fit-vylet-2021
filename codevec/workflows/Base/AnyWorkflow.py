@@ -1,4 +1,6 @@
 
+from typing import Dict, Any
+
 class AnyWorkflow:
 
   def __init__(self):
@@ -35,5 +37,11 @@ class AnyWorkflow:
 
     return ctx
 
-  def run(self, ctx):
+  def get_from_ctx(self, key) -> Any:
+    return self.global_ctx[key]
+
+  def update_ctx(self, dict: Dict):
+    self.global_ctx.update(dict)
+
+  def run(self):
     assert False, "Must be implemented"

@@ -28,18 +28,16 @@ class TokenizeWorkflow(AnyWorkflow):
 
     self.config = config
 
-  def run(self, ctx):
-    assert 'processing_filenames' in ctx.keys(), "Filenames must be set for key 'processing_filenames'"
-
-    filenames = ctx['processing_filenames']
+  def run(self):
+    filenames = self.get_from_ctx('processing_filenames')
 
     os.mkdir(self.config.working_dir + '/' + self.config.tokens_dir)
 
     file_info = self.__tokenize(self.config, filenames)
     file_info.to_json(path_or_buf=self.config.working_dir + '/' + self.config.map_filename)
 
-    self.global_ctx.update(dict(tokens_info=file_info,
-                                tokens_dir=self.config.working_dir + '/' + self.config.tokens_dir))
+    self.update_ctx(dict(tokens_info=file_info,
+                         tokens_dir=self.config.working_dir + '/' + self.config.tokens_dir))
 
   @staticmethod
   def __tokenize(config: Config, filenames: Set[str]) -> pd.DataFrame:
