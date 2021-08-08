@@ -1,1 +1,1 @@
-from AnyWorkflow import AnyWorkflow
+from .AnyWorkflow import AnyWorkflow
