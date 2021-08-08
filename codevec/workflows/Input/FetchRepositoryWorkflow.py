@@ -16,7 +16,6 @@ class FetchRepositoryWorkflow(AnyWorkflow):
   class Config:
     repository_url: str
     file_regexes: List[str]
-    transformer_workflow_config: TransformerEncodeWorkflow.Config
 
     output_dir: str = 'cache_dir'
 
