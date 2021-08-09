@@ -1,7 +1,3 @@
-#
-# Thanks for inspiration:
-# https://github.com/UKPLab/sentence-transformers/blob/master/sentence_transformers/models/Transformer.py
-#
 
 from transformers import AutoModel, AutoTokenizer, AutoConfig
 from pytorch_lightning import LightningModule
@@ -16,37 +12,60 @@ import torch
 class Transformer(LightningModule):
 
   @dataclass
-  class Config:
+  class SplitConfig:
+    stride: int = 128
 
-    @dataclass
-    class SplitConfig:
-      stride: int = 128
-
+  @dataclass
+  class AutoConfig:
     model_name: str
     tokenizer_name: str
-    output_hidden_states: bool = False
-    split_config: SplitConfig = None
     model_args: Dict = field(default_factory=dict)
     tokenizer_args: Dict = field(default_factory=dict)
+
+  @dataclass
+  class ActionConfig:
+    output_hidden_states: bool = False
     autograd: bool = False
     requires_additional_pad_token: bool = False
 
-  def __init__(self, config: Config):
+  def __init__(self, model_config, model, tokenizer, action_config: ActionConfig, split_config: SplitConfig = None):
     super().__init__()
-    self.config = config
 
-    if self.config.output_hidden_states:
-      self.config.model_args['output_hidden_states'] = True
+    self.model_config = model_config
+    self.model = model
+    self.tokenizer = tokenizer
 
-    self.transformer_config = AutoConfig.from_pretrained(config.model_name, **config.model_args)
-    self.model = AutoModel.from_pretrained(config.model_name, config=self.transformer_config)
-    self.tokenizer = AutoTokenizer.from_pretrained(config.tokenizer_name, **config.tokenizer_args)
+    self.split_config = split_config
+    self.action_config = action_config
 
-    if config.requires_additional_pad_token:
+    self.model.output_hidden_states = action_config.output_hidden_states
+
+    if action_config.requires_additional_pad_token:
       self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
   def __repr__(self):
-    return "Transformer({}) with Transformer model: {} ".format(self.config, self.model.__class__.__name__)
+    return "Transformer with Transformer model: {} ".format(self.model.__class__.__name__)
+
+  @staticmethod
+  def auto_model(auto_config: AutoConfig,
+                 action_config: ActionConfig,
+                 split_config: SplitConfig = None):
+    """
+    Creates a model using hugging face auto module
+
+    Args:
+      auto_config: Configuration for automodel
+      action_config: Configuration for model inference
+      split_config: Configuration for split
+
+    Returns: A Transformer object
+
+    """
+    model_config = AutoConfig.from_pretrained(auto_config.model_name, **auto_config.model_args)
+    model = AutoModel.from_pretrained(auto_config.model_name, config=model_config)
+    tokenizer = AutoTokenizer.from_pretrained(auto_config.tokenizer_name, **auto_config.tokenizer_args)
+
+    return Transformer(model_config, model, tokenizer, action_config, split_config)
 
   def forward(self, x: RawFeatures) -> EmbeddedFeatures:
     """
@@ -57,13 +76,17 @@ class Transformer(LightningModule):
     """
     output = None
 
-    if self.config.autograd:
-      output = self.model(**x.model_input, return_dict=True)
+    if self.action_config.autograd:
+      output = self.model(**x.model_input,
+                          return_dict=True,
+                          output_hidden_states = self.action_config.output_hidden_states)
     else:
       with torch.no_grad():
-        output = self.model(**x.model_input, return_dict=True)
+        output = self.model(**x.model_input,
+                            return_dict=True,
+                            output_hidden_states = self.action_config.output_hidden_states)
 
-    return EmbeddedFeatures.from_transformer(x, output, self.config.output_hidden_states)
+    return EmbeddedFeatures.from_transformer(x, output)
 
   def tokenize(self, texts: Union[str, List[str]]) -> RawFeatures:
     """ Tokenizes text features
@@ -80,13 +103,12 @@ class Transformer(LightningModule):
       'padding': True,
       'truncation': 'longest_first',
       'return_tensors': 'pt',
-      'max_length': min(self.tokenizer.model_max_length, self.transformer_config.max_position_embeddings)
+      'max_length': min(self.tokenizer.model_max_length, self.model_config.max_position_embeddings)
     }
 
-    if self.config.split_config:
+    if self.split_config:
       kwargs['return_overflowing_tokens'] = True
-      kwargs['stride'] = self.config.split_config.stride
-      kwargs['max_length'] = min(self.tokenizer.model_max_length, self.transformer_config.max_position_embeddings)
+      kwargs['stride'] = self.split_config.stride
 
     output = self.tokenizer(items, **kwargs)
 
@@ -104,16 +126,8 @@ class Transformer(LightningModule):
 
     return features
 
-  def __parse_tokenizer_input(self, text: Union[str, List[str]]) -> List[str]:
-    """ Parsers tokenizer input
-
-    Args:
-        text (Union[str, List[str]]): texts to encode with transformer
-
-    Returns:
-        [List[str]]: Output + texts needed for tokenization.
-    """
-
+  @staticmethod
+  def __parse_tokenizer_input(text: Union[str, List[str]]) -> List[str]:
     if isinstance(text, str):
       items = [text]
       return items

@@ -24,7 +24,7 @@ class MaxPooling(LightningModule):
         Features: A features vector, which has gone through max pooling
     """
     mask = x.attention_mask.unsqueeze(-1).expand(x.token_embeddings.size()).float()
-    x.token_embeddings[mask == 0] = -1e9
+    x.token_embeddings[mask == 0] = -1e4
     max_vector = torch.max(x.token_embeddings, dim = self.dim).values
 
     x.token_embeddings = max_vector

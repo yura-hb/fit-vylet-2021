@@ -13,14 +13,18 @@ class TestTransformer:
     we were freezed with minus 30 and strong snow. Everything was ok.
     """
 
-    config = Transformer.Config('bert-base-cased', 'bert-base-cased', True, model_args = { 'output_hidden_states': False })
-    bert_model = Transformer(config)
+    auto_config = Transformer.AutoConfig('bert-base-cased', 'bert-base-cased')
+    action_config = Transformer.ActionConfig(output_hidden_states=True)
+    split_config = Transformer.SplitConfig(128)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
 
     features = bert_model.tokenize(text)
     embedding = bert_model(features)
 
     assert isinstance(features, RawFeatures)
     assert isinstance(embedding, EmbeddedFeatures)
+    assert embedding.hidden_states.numel() > 0, "Hidden states must be set"
     assert len(embedding.token_embeddings) == len(features.input_ids)
 
   def test_roberta_model_encoding(self):
@@ -29,8 +33,11 @@ class TestTransformer:
     we were freezed with minus 30 and strong snow. Everything was ok.
     """
 
-    config = Transformer.Config('roberta-base', 'roberta-base', True, model_args = { 'output_hidden_states': False })
-    bert_model = Transformer(config)
+    auto_config = Transformer.AutoConfig('roberta-base', 'roberta-base')
+    action_config = Transformer.ActionConfig()
+    split_config = Transformer.SplitConfig(128)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
 
     features = bert_model.tokenize(text)
     embedding = bert_model(features)
@@ -45,10 +52,11 @@ class TestTransformer:
     we were freezed with minus 30 and strong snow. Everything was ok.
     """
 
-    config = Transformer.Config('gpt2', 'gpt2', True,
-                                model_args = { 'output_hidden_states': False },
-                                requires_additional_pad_token=True)
-    bert_model = Transformer(config)
+    auto_config = Transformer.AutoConfig('gpt2', 'gpt2')
+    action_config = Transformer.ActionConfig(requires_additional_pad_token=True)
+    split_config = Transformer.SplitConfig(128)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
 
     features = bert_model.tokenize(text)
     embedding = bert_model(features)
@@ -66,13 +74,11 @@ class TestTransformer:
 
     texts = [text * 20, text * 20, text]
 
-    split_config = Transformer.Config.SplitConfig(128)
-    config = Transformer.Config('bert-base-cased',
-                                'bert-base-cased',
-                                True,
-                                split_config=split_config,
-                                model_args={'output_hidden_states': False})
-    bert_model = Transformer(config)
+    auto_config = Transformer.AutoConfig('bert-base-cased', 'bert-base-cased')
+    action_config = Transformer.ActionConfig()
+    split_config = Transformer.SplitConfig(128)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
 
     features = bert_model.tokenize(texts)
     embedding = bert_model(features)
@@ -91,8 +97,11 @@ class TestTransformer:
     device = 'gpu' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
 
-    config = Transformer.Config('bert-base-cased', 'bert-base-cased', True, model_args = { 'output_hidden_states': False })
-    bert_model = Transformer(config)
+    auto_config = Transformer.AutoConfig('bert-base-cased', 'bert-base-cased')
+    action_config = Transformer.ActionConfig()
+    split_config = Transformer.SplitConfig(128)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
 
     features = bert_model.tokenize([text])
     features = features.to(device)
@@ -115,15 +124,23 @@ class TestTransformer:
     we were freezed with minus 30 and strong snow. Everything was ok.
     """
 
-    config = Transformer.Config('bert-base-cased', 'bert-base-cased', True, model_args = { 'output_hidden_states': False }, autograd = True)
-    bert_model = Transformer(config)
+    auto_config = Transformer.AutoConfig('bert-base-cased', 'bert-base-cased')
+    action_config = Transformer.ActionConfig(autograd=True)
+    split_config = Transformer.SplitConfig(128)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
+
     features = bert_model.tokenize([text])
     embedding = bert_model(features)
 
     assert embedding.token_embeddings.requires_grad, "Grad must work"
 
-    config = Transformer.Config('bert-base-cased', 'bert-base-cased', True, model_args = { 'output_hidden_states': False }, autograd = False)
-    bert_model = Transformer(config)
+    auto_config = Transformer.AutoConfig('bert-base-cased', 'bert-base-cased')
+    action_config = Transformer.ActionConfig(autograd=False)
+    split_config = Transformer.SplitConfig(128)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
+
     features = bert_model.tokenize([text])
     embedding = bert_model(features)
 
@@ -140,19 +157,20 @@ class TestTransformer:
 
     assert features.input_ids.shape[0] == 1
 
-    split_config = Transformer.Config.SplitConfig(0)
+    split_config = Transformer.SplitConfig(0)
     features = self.get_bert_features(text, split_config)
 
     assert features.input_ids.shape[0] == 9
 
-    split_config = Transformer.Config.SplitConfig(128)
+    split_config = Transformer.SplitConfig(128)
     features = self.get_bert_features(text, split_config)
 
     assert features.input_ids.shape[0] == 11
 
-  def get_bert_features(self, text: str, split_config: Transformer.Config.SplitConfig):
-    config = Transformer.Config('bert-base-cased', 'bert-base-cased', split_config=split_config,
-                                model_args={'output_hidden_states': False}, autograd=False)
-    bert_model = Transformer(config)
+  def get_bert_features(self, text: str, split_config: Transformer.SplitConfig):
+    auto_config = Transformer.AutoConfig('bert-base-cased', 'bert-base-cased')
+    action_config = Transformer.ActionConfig(autograd=False)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
 
     return bert_model.tokenize([text])

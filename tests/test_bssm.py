@@ -9,8 +9,11 @@ class TestBSSM:
     text_a = "Some long day will end soon"
     text_b = "The day must to end soon"
 
-    config = Transformer.Config('bert-base-cased', 'bert-base-cased', model_args = { 'output_hidden_states': True })
-    bert_model = Transformer(config)
+    auto_config = Transformer.AutoConfig('bert-base-cased', 'bert-base-cased')
+    action_config = Transformer.ActionConfig(output_hidden_states=True, autograd=False)
+    split_config = Transformer.SplitConfig(128)
+
+    bert_model = Transformer.auto_model(auto_config, action_config, split_config)
 
     tokenized = bert_model.tokenize([text_a, text_b])
     tokenized_len = tokenized.input_ids.shape[1]

@@ -104,7 +104,7 @@ class EmbeddedFeatures:
     save(d, path)
 
   @staticmethod
-  def from_transformer(raw_features, output, include_hidden_states: bool):
+  def from_transformer(raw_features, output):
     states = output[0]
 
     embedded = EmbeddedFeatures(token_embeddings=states.to(torch.float16),
@@ -112,7 +112,7 @@ class EmbeddedFeatures:
                                 attention_mask=raw_features.attention_mask.to(torch.bool),
                                 sample_mapping=raw_features.sample_mapping.to(torch.int))
 
-    if include_hidden_states:
+    if output.hidden_states:
       embedded.hidden_states = torch.stack(list(output.hidden_states), dim = 0).to(torch.float16)
 
     return embedded

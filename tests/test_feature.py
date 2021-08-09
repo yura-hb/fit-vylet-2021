@@ -17,10 +17,11 @@ class TestFeature:
       os.mkdir(self.output_dir)
 
     if not os.path.exists(self.input_features):
-      split_config = Transformer.Config.SplitConfig(128)
-      config = Transformer.Config('bert-base-cased', 'bert-base-cased', split_config=split_config,
-                                  model_args={'output_hidden_states': False}, autograd=False)
-      bert_model = Transformer(config)
+      auto_config = Transformer.AutoConfig('bert-base-cased', 'bert-base-cased')
+      action_config = Transformer.ActionConfig()
+      split_config = Transformer.SplitConfig(128)
+
+      bert_model = Transformer.auto_model(auto_config, action_config, split_config)
 
       text = """
          Yesterday was a beautiful day. In the morning it was 30 degrees hot. In the afternoon it was raining and in 

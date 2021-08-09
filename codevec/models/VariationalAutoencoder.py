@@ -56,7 +56,7 @@ class VariationalAutoEncoder(LightningModule):
     q = torch.distributions.Normal(mu, std)
     z = q.rsample()
 
-    return (z, mu, var, std)
+    return z, mu, var, std
 
   def configure_optimizers(self):
     return torch.optim.Adam(self.parameters(), lr=self.config.learning_rate)
