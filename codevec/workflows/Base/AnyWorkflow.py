@@ -41,7 +41,11 @@ class AnyWorkflow:
     return self.global_ctx[key]
 
   def update_ctx(self, dict: Dict):
+    print(self.global_ctx)
+
     self.global_ctx.update(dict)
+
+    print(self.global_ctx)
 
   def run(self):
     assert False, "Must be implemented"

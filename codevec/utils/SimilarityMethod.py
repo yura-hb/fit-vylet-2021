@@ -4,6 +4,8 @@ import numpy.typing as npt
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import PCA
 
+from scipy import spatial
+
 from typing import Generator
 
 from . import EmbeddedFeatures
@@ -22,7 +24,7 @@ class SimilarityMethod:
 
     Args:
         embedded (EmbeddedFeatures): A 1-block embedding features
-        normalize (bool): If data should be normalized
+        layer (int): A layer to take embeddings from
 
     Yields:
         Generator[int, npt.ArrayLike, NoReturn]: PCA for each block
@@ -63,7 +65,7 @@ class SimilarityMethod:
       yield similarity
 
   @staticmethod
-  def cosine_sim(lhs: torch.Tensor, rhs: torch.Tensor) -> torch.Tensor:
+  def cosine_sim(lhs: torch.Tensor, rhs: torch.Tensor) -> npt.ArrayLike:
     """ Calculates a standard cosine similarity of vectors
 
     Args:
@@ -71,4 +73,4 @@ class SimilarityMethod:
         rhs (EmbeddedFeatures): An embedding after pass to transformer
     """
 
-    return torch.nn.functional.cosine_similarity(lhs.unsqueeze(0), rhs.unsqueeze(0))
+    return 1 - spatial.distance.cosine(lhs.numpy(), rhs.numpy())
