@@ -36,11 +36,12 @@ class FetchRepositoryWorkflow(AnyWorkflow):
 
     try:
       self.__clone(self.config)
+
+      os.chdir(wd)
+
       filenames = self.__make_index(self.config)
 
       self.update_ctx(dict(processing_filenames = filenames))
-
-      os.chdir(wd)
     except Exception as exc:
       os.chdir(wd)
 
@@ -65,6 +66,6 @@ class FetchRepositoryWorkflow(AnyWorkflow):
     filenames = set()
 
     for regex in config.file_regexes:
-      filenames.update(glob.glob(regex, recursive=True))
+      filenames.update(glob.glob(config.output_dir + '/' + regex, recursive=True))
 
     return filenames
