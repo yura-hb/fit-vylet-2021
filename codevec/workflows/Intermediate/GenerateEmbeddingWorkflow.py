@@ -38,7 +38,7 @@ class GenerateEmbeddingWorkflow(AnyWorkflow):
     tokens_info = self.get_from_ctx('tokens_info')
     tokens_dir = self.get_from_ctx('tokens_dir')
 
-    os.mkdir(self.config.working_dir + '/' + self.config.embedding_dir)
+    os.makedirs(self.config.working_dir + '/' + self.config.embedding_dir, exist_ok=True)
 
     self.__gen_embedding(tokens_dir, tokens_info, self.config)
 

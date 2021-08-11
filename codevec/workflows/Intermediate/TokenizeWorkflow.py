@@ -31,7 +31,7 @@ class TokenizeWorkflow(AnyWorkflow):
   def run(self):
     filenames = self.get_from_ctx('processing_filenames')
 
-    os.mkdir(self.config.working_dir + '/' + self.config.tokens_dir)
+    os.makedirs(self.config.working_dir + '/' + self.config.tokens_dir, exist_ok=True)
 
     file_info = self.__tokenize(self.config, filenames)
     file_info.to_json(path_or_buf=self.config.working_dir + '/' + self.config.map_filename)

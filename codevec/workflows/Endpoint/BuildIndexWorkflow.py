@@ -41,6 +41,8 @@ class BuildIndexWorkflow(AnyWorkflow):
     token_files = glob.glob(tokens_dir + '/' + self.config.token_regex)
     token_files = [file[len(tokens_dir) + 1:]  for file in token_files]
 
+    os.makedirs(self.config.working_dir + '/' + self.config.output_dir, exist_ok=True)
+
     iterator = iter(token_files)
 
     for batch in self.__batched(iterator, self.config.processing_batch_size):

@@ -28,7 +28,7 @@ class FetchRepositoryWorkflow(AnyWorkflow):
     if os.path.exists(self.config.output_dir):
       shutil.rmtree(self.config.output_dir, ignore_errors=True)
 
-    os.mkdir(self.config.output_dir)
+    os.makedirs(self.config.output_dir, exist_ok=True)
 
     wd = os.getcwd()
 
