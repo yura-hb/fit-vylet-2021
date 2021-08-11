@@ -26,7 +26,7 @@ class Transformer(LightningModule):
   class ActionConfig:
     output_hidden_states: bool = False
     autograd: bool = False
-    requires_additional_pad_token: bool = False
+    is_gpt_like: bool = False
 
   def __init__(self, model_config, model, tokenizer, action_config: ActionConfig, split_config: SplitConfig = None):
     super().__init__()
@@ -40,8 +40,10 @@ class Transformer(LightningModule):
 
     self.model.output_hidden_states = action_config.output_hidden_states
 
-    if action_config.requires_additional_pad_token:
-      self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    # A help config to allow GPT-like models to correctly process multiple batches of data
+    if action_config.is_gpt_like:
+      self.tokenizer.pad_token = self.tokenizer.eos_token
+      self.model.config.pad_token_id = self.model.config.eos_token_id
 
   def __repr__(self):
     return "Transformer with Transformer model: {} ".format(self.model.__class__.__name__)
