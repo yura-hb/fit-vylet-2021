@@ -31,6 +31,8 @@ class VariationalAutoEncoder(LightningModule):
     self.mu = nn.Linear(self.config.encoder_output_dim, self.config.latent_dim)
     self.var = nn.Linear(self.config.encoder_output_dim, self.config.latent_dim)
 
+    self.learning_rate = config.learning_rate
+
     self.log_scale = nn.Parameter(torch.Tensor([0.0]))
 
   def training_step(self, batch, batch_idx):
@@ -63,7 +65,7 @@ class VariationalAutoEncoder(LightningModule):
   def configure_optimizers(self):
     # (self.lr or self.config.learning_rate) enables automatic lr finding from paper
     # https://pytorch-lightning.readthedocs.io/en/latest/advanced/lr_finder.html
-    return torch.optim.Adam(self.parameters(), lr=(self.lr or self.config.learning_rate))
+    return torch.optim.Adam(self.parameters(), lr=(self.lr or self.learning_rate))
 
   def predict_step(self, batch: Any, batch_idx: int) -> Any:
     x, _ = batch
