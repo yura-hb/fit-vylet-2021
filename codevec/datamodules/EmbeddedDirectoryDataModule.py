@@ -37,25 +37,25 @@ class EmbeddedDirectoryDataModule(pl.LightningDataModule):
     test_files_ratio: float = 0.05
     validation_file_ratio: float = 0.05
 
-    file_regexes: List[str] = field(default_factory=['*.pt'])
+    file_regexes: List[str] = field(default_factory=list)
 
   def __init__(self, config: Config):
     super().__init__()
 
-    self.config = config
+    self.model_config = config
 
   def setup(self, stage: Optional[str] = None) -> None:
-    files = self.fetch_files(self.config.directory, self.config.file_regexes)
+    files = self.fetch_files(self.model_config.directory, self.model_config.file_regexes)
 
     assert len(files) > 0, "At least one file must match the predicate"
-    assert self.config.train_files_ratio + self.config.test_files_ratio + self.config.validation_file_ratio <= 1, \
+    assert self.model_config.train_files_ratio + self.model_config.test_files_ratio + self.model_config.validation_file_ratio <= 1, \
            "Overall split ratio must be less, than one"
 
     files_count = len(files)
 
-    train_files_count = math.floor(files_count * self.config.train_files_ratio)
-    test_files_count = math.floor(files_count * self.config.test_files_ratio)
-    validation_files_count = math.floor(files_count * self.config.validation_file_ratio)
+    train_files_count = math.floor(files_count * self.model_config.train_files_ratio)
+    test_files_count = math.floor(files_count * self.model_config.test_files_ratio)
+    validation_files_count = math.floor(files_count * self.model_config.validation_file_ratio)
 
     self.train_files = files[:train_files_count]
     del files[:train_files_count]
@@ -72,17 +72,17 @@ class EmbeddedDirectoryDataModule(pl.LightningDataModule):
   def train_dataloader(self) -> DataLoader:
     dataset = EmbeddedFilesDataset(self.train_files)
 
-    return DataLoader(dataset, batch_size=self.config.batch_size)
+    return DataLoader(dataset, batch_size=self.model_config.batch_size)
 
   def val_dataloader(self) -> DataLoader:
     dataset = EmbeddedFilesDataset(self.validation_files)
 
-    return DataLoader(dataset, batch_size=self.config.batch_size)
+    return DataLoader(dataset, batch_size=self.model_config.batch_size)
 
   def test_dataloader(self) -> DataLoader:
     dataset = EmbeddedFilesDataset(self.test_files)
 
-    return DataLoader(dataset, batch_size=self.config.batch_size)
+    return DataLoader(dataset, batch_size=self.model_config.batch_size)
 
   @staticmethod
   def fetch_files(directory: str, file_regexes: List[str]) -> List[str]:
