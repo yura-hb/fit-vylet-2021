@@ -10,9 +10,8 @@ from dataclasses import dataclass
 class VariationalAutoencoderTrainingWorkflow(AnyWorkflow):
   """
   IN:
-  training_dataset: torch.nn.DataSet
-  OUT:
-
+  training_dataset: pl.LightningDataModule
+  OUT: None
   """
 
   @dataclass
@@ -29,6 +28,3 @@ class VariationalAutoencoderTrainingWorkflow(AnyWorkflow):
     datamodule: pl.LightningDataModule = self.get_from_ctx('training_dataset')
 
     self.config.trainer.fit(self.config.model)
-
-
-

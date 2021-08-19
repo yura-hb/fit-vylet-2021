@@ -4,7 +4,7 @@ import glob
 import math
 
 from torch.utils.data import DataLoader, IterableDataset
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from codevec.utils.EmbeddedFeatures import EmbeddedFeatures
@@ -37,7 +37,7 @@ class EmbeddedDirectoryDataModule(pl.LightningDataModule):
     test_files_ratio: float = 0.05
     validation_file_ratio: float = 0.05
 
-    file_regexes: List[str] = ['*.pt']
+    file_regexes: List[str] = field(default_factory=['*.pt'])
 
   def __init__(self, config: Config):
     super().__init__()
@@ -92,14 +92,3 @@ class EmbeddedDirectoryDataModule(pl.LightningDataModule):
       filenames += glob.glob(directory + '/' + regex, recursive=True)
 
     return filenames
-
-  @staticmethod
-  def count_embeddings(filenames):
-    print('Begin counting embeddings')
-
-    count = 0
-
-    for filename in filenames:
-      embedding = EmbeddedFeatures.read(filename)
-
-      count += embedding
