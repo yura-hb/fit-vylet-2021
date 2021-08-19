@@ -40,6 +40,8 @@ class TestFeature:
     raw = RawFeatures.read(self.input_features)
     embedded = EmbeddedFeatures.read(self.output_embeddings)
 
+    print(embedded.token_embeddings.shape)
+
     assert len(torch.unique(raw.sample_mapping)) == 3, 'Only 3 samples are presented in the features'
     assert torch.all(raw.attention_mask == embedded.attention_mask), 'Attention mask must be the same'
     assert torch.all(raw.sample_mapping == embedded.sample_mapping), 'Sample mapping must be the same'
@@ -66,4 +68,23 @@ class TestFeature:
     at.token_embeddings[0][0][0] = -1
 
     assert embedded.token_embeddings[0][0][0] != at.token_embeddings[0][0][0], 'They aren\'t copies'
+
+  def test_embedded_read_write(self):
+    raw = RawFeatures.read(self.input_features)
+    embedded = EmbeddedFeatures.read(self.output_embeddings)
+
+    assert raw.input_ids.shape == embedded.token_embeddings.shape[:2]
+    assert embedded.token_embeddings.shape[:2] == embedded.attention_mask.shape
+
+  def test_embedded_write_flattening(self):
+    d = torch.load(self.output_embeddings)
+
+    assert 'token_embeddings' in d.keys()
+    assert 'embedding_shape' in d.keys()
+    assert 'attention_mask' in d.keys()
+
+    embeddings = d['token_embeddings']
+
+    assert embeddings.shape[0] > 512, "An flatten embeddings shape must be bigger than block size"
+    assert embeddings.shape[1] == 768, "An embedding vector must be 768 length"
 

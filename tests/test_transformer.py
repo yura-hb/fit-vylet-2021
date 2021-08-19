@@ -53,7 +53,7 @@ class TestTransformer:
     """
 
     auto_config = Transformer.AutoConfig('gpt2', 'gpt2')
-    action_config = Transformer.ActionConfig(requires_additional_pad_token=True)
+    action_config = Transformer.ActionConfig(is_gpt_like=True)
     split_config = Transformer.SplitConfig(128)
 
     bert_model = Transformer.auto_model(auto_config, action_config, split_config)

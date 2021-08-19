@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 
-from typing import Tuple
+from typing import Tuple, Any
 
 class VariationalAutoEncoder(LightningModule):
 
@@ -45,6 +45,8 @@ class VariationalAutoEncoder(LightningModule):
     elbo = kl_divergence - reconstruction_loss
     elbo = elbo.mean()
 
+    self.log('training_elbo_loss', elbo, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
     return elbo
 
   def get_latent_encoding(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor,
@@ -59,7 +61,14 @@ class VariationalAutoEncoder(LightningModule):
     return z, mu, var, std
 
   def configure_optimizers(self):
-    return torch.optim.Adam(self.parameters(), lr=self.config.learning_rate)
+    # (self.lr or self.config.learning_rate) enables automatic lr finding from paper
+    # https://pytorch-lightning.readthedocs.io/en/latest/advanced/lr_finder.html
+    return torch.optim.Adam(self.parameters(), lr=(self.lr or self.config.learning_rate))
+
+  def predict_step(self, batch: Any, batch_idx: int) -> Any:
+    x, _ = batch
+
+    return self.get_latent_encoding(batch)
 
   @staticmethod
   def __kl_divergence(z, mu, std):

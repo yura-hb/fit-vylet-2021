@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 import torch
-from torch import Tensor, tensor, cat, save, load, max, unique, sum, zeros
+from torch import Tensor, tensor, cat, save, load, unique, zeros, stack
 
 from typing import Dict, List
 
@@ -78,6 +78,24 @@ class EmbeddedFeatures:
 
     d = load(path)
 
+    if d.get('embedding_shape'):
+      embedding_shape = d['embedding_shape']
+
+      embeddings = d['token_embeddings']
+      # (Batch idx * block_length) - actual blocks count
+      pad_embedding_count = (embedding_shape[0] * embedding_shape[1]) - embeddings.shape[0]
+
+      embeddings = cat((embeddings, zeros((pad_embedding_count, embedding_shape[2]))), dim=0)
+
+      # TODO: - Implement hidden states
+      return EmbeddedFeatures(
+        token_embeddings=embeddings.view(embedding_shape),
+        cls_token=d['cls_token'],
+        attention_mask=d['attention_mask'],
+        hidden_states=d['hidden_states'],
+        sample_mapping=d['sample_mapping']
+      )
+
     return EmbeddedFeatures(
       token_embeddings = d['token_embeddings'],
       cls_token = d['cls_token'],
@@ -93,12 +111,18 @@ class EmbeddedFeatures:
         path(str): path to write file
     """
 
+    embedding_shape = self.token_embeddings.shape
+
+    # A trick to save a lot of space, because embeddings are in mostly aligned to the size of the block.
+    # When a embedding is badly aligned to the size of block we can save n-1 * 768 * 16 bytes of data.
+
     d = {
-      'token_embeddings': self.token_embeddings,
-      'cls_token': self.cls_token,
+      'token_embeddings': self.token_embeddings[self.attention_mask == True],
       'attention_mask': self.attention_mask,
-      'hidden_states': self.hidden_states,
-      'sample_mapping': self.sample_mapping
+      'hidden_states': self.hidden_states[:, self.attention_mask == True] if self.hidden_states.numel() > 0 else self.hidden_states,
+      'cls_token': self.cls_token,
+      'sample_mapping': self.sample_mapping,
+      'embedding_shape': embedding_shape
     }
 
     save(d, path)
