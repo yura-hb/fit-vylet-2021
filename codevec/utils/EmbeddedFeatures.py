@@ -85,7 +85,8 @@ class EmbeddedFeatures:
       # (Batch idx * block_length) - actual blocks count
       pad_embedding_count = (embedding_shape[0] * embedding_shape[1]) - embeddings.shape[0]
 
-      embeddings = cat((embeddings, zeros((pad_embedding_count, embedding_shape[2]))), dim=0)
+      if not embedding_shape == embeddings.shape:
+        embeddings = cat((embeddings, zeros((pad_embedding_count, embedding_shape[2]))), dim=0)
 
       # TODO: - Implement hidden states
       return EmbeddedFeatures(
