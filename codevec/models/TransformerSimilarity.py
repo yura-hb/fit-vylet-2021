@@ -48,9 +48,7 @@ class TransformerSimilarity(LightningModule):
 
   def training_step(self, batch, batch_idx):
     x, y = batch
-
     prediction = self(x)
-
     loss = self.loss(y, prediction)
 
     self.log('loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)

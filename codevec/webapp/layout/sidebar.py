@@ -21,7 +21,6 @@ layout = html.Div([
            className=ElementId.sidebar_content_container.value)
 ], id=ElementId.sidebar.value, className=ElementId.sidebar.value)
 
-
 @app.callback(Output(ElementId.sidebar_toggle.value, "n_clicks"),
               Output(ElementId.sidebar.value, "className"),
               Output(ElementId.sidebar_content_container.value, "className"),
@@ -35,7 +34,6 @@ def toggle_sidebar(clicks, className):
     return 0, ElementId.sidebar_collapsed.value, ElementId.sidebar_content_container_hidden.value
 
   return 0, ElementId.sidebar.value, ElementId.sidebar_content_container.value
-
 
 @app.callback(Output(ElementId.sidebar_content_container.value, 'children'),
               Input(ElementId.is_active_flow.value, 'data'),

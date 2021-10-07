@@ -19,6 +19,7 @@ class Transformer(LightningModule):
   class AutoConfig:
     model_name: str
     tokenizer_name: str
+    cache_path: str = None
     model_args: Dict = field(default_factory=dict)
     tokenizer_args: Dict = field(default_factory=dict)
 
@@ -63,7 +64,13 @@ class Transformer(LightningModule):
     Returns: A Transformer object
 
     """
-    model_config = AutoConfig.from_pretrained(auto_config.model_name, **auto_config.model_args)
+
+    params = {}
+
+    if auto_config.cache_path:
+      params.update(dict(cache_path = auto_config.cache_path))
+
+    model_config = AutoConfig.from_pretrained(auto_config.model_name, **auto_config.model_args, **params)
     model = AutoModel.from_pretrained(auto_config.model_name, config=model_config)
     tokenizer = AutoTokenizer.from_pretrained(auto_config.tokenizer_name, **auto_config.tokenizer_args)
 

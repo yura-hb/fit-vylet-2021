@@ -34,8 +34,8 @@ class BSSM(LightningModule):
            "Input must have 2 embeddings"
 
     # [x, z]
-    x = features.token_embeddings[0]
-    y = features.token_embeddings[1]
+    x = features.token_embeddings[0].to(torch.float)
+    y = features.token_embeddings[1].to(torch.float)
 
     # [z, x] @ [x, z] = [z, z]
     attention = torch.mm(x.T, y)

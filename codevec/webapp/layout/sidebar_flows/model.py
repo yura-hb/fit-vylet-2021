@@ -58,13 +58,13 @@ def load_model(confirm_clicks, cancel_clicks, model_path):
   if user_click == ElementId.model_confirm_button.value and confirm_clicks == 1:
     print('Model did changed')
 
-    config = Transformer.Config(model_path,
-                                model_path,
-                                True,
-                                model_args={'output_hidden_states': True},
-                                autograd=False)
+    auto_config = Transformer.AutoConfig(model_path, model_path)
+    action_config = Transformer.ActionConfig(output_hidden_states = True)
+    split_config = Transformer.SplitConfig()
 
-    Context.transformer = Transformer(config)
+    transformer = Transformer.auto_model(auto_config, action_config, split_config)
+
+    Context.transformer = transformer
 
     return True, "{}".format(Context.transformer.model.config), 0, 0
 
