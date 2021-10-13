@@ -9,9 +9,15 @@ from ..Base import AnyWorkflow
 
 class TokenizeWorkflow(AnyWorkflow):
   """
-  IN: processing_filenames[Set[Str]]
-  OUT: tokens_info: pd.DataFrame
-  OUT: tokens_dir: str
+  A workflow, which generates tokens from raw code
+
+  :param[in][ctx] processing_filenames[Set[str]]: A set of the files, which should be tokenized
+  :param[out][ctx] tokens_info: A dataframe, which contains information about tokenized files. Columns are:
+                                id: index of the file,
+                                filename: the path to the file,
+                                tokens_path: a path to tokenized version of the file,
+                                blocks: an amount of blocks, which were created after tokenization,
+  :param[out][ctx] tokens_dir: A directory to tokens.
   """
 
   @dataclass

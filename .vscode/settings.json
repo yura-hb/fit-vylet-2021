@@ -1,8 +1,0 @@
-{
-  "python.pythonPath": "/Users/hayeuyur/opt/miniconda3/envs/vylet/bin/python",
-  "[python]": {
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true,
-    "editor.formatOnSave": true
-  }
-}

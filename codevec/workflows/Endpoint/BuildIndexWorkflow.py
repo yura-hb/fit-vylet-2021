@@ -12,9 +12,10 @@ from ..Base import AnyWorkflow
 
 class BuildIndexWorkflow(AnyWorkflow):
   """
-  IN: tokens_dir[str]
-  IN: embedding_dir[str]
-  OUT: None
+  A workflow, which groups embedded tokens by their raw identifiers.
+
+  :param[in][ctx] tokens_dir: A directory containing tokens
+  :param[in][ctx] embedding_dir: A directory containing embeddings
   """
 
   @dataclass

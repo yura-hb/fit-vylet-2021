@@ -11,6 +11,11 @@ import shutil
 from ..Base import AnyWorkflow
 
 class FetchRepositoryWorkflow(AnyWorkflow):
+  """
+  A workflow, which clones a github repository.
+
+  :param[out][ctx] processing_filenames: pathes to files, which matches file_regexes
+  """
 
   @dataclass
   class Config:

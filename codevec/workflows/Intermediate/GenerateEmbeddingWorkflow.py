@@ -15,9 +15,11 @@ from ..Base import AnyWorkflow
 
 class GenerateEmbeddingWorkflow(AnyWorkflow):
   """
-  IN: tokens_info: pd.DataFrame
-  IN: tokens_dir: str
-  OUT: embedding_dir: str
+  A workflow, which generates embeddings from raw tokens
+
+  :param[in][ctx] tokens_info:
+  :param[in][ctx] tokens_dir:
+  :param[out][ctx] embedding_dir:
   """
 
   @dataclass
